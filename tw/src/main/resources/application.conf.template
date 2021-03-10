@@ -1,0 +1,8 @@
+TwitterConf {
+  Oauth {
+    APIKey = """KEY1""",
+    APISecret = """KEY2""",
+    AccessToken = """KEY3""",
+    AccessTokenSecret = """KEY4"""
+  }
+}
