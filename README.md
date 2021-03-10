@@ -13,3 +13,5 @@ root@d9930ca7501d:~# pwd
 /root
 root@d9930ca7501d:~# cd GIT/lamastex/mep/
 ```
+
+You may have to change owner to user if the files are created inside the docker container as root: `sudo chown -R user:group *`. Replace `user` and `group` with the right values.
