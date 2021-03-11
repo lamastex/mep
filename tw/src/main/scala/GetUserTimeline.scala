@@ -1,3 +1,4 @@
+package org.lamastex.mep.tw
 import twitter4j.TwitterFactory
 import twitter4j.TwitterException
 import twitter4j.Twitter
