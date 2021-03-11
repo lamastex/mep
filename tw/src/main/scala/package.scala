@@ -49,7 +49,11 @@ class TwitterBasic {
     }
   }
 
-  def getStatusFromStatusID(twitter: Twitter, Tweet_ID: Long): Try[Status] = Try {
+  def tryStringToLong(Tweet_ID_String: String): Try[Long] = Try {
+      Tweet_ID_String.toLong
+  } 
+
+  def tryStatusFromStatusID(twitter: Twitter, Tweet_ID: Long): Try[Status] = Try {
       twitter.showStatus(Tweet_ID)
   } 
 
