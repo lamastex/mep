@@ -21,30 +21,23 @@ object getUserTimeline extends TwitterBasic {
     val statuses = ArrayBuffer[Status]()
     var pageno = 1;
     breakable {
-    while(true) {
-      try {
-        println("getting tweets");
-        val size: Int = statuses.size; // actual tweets count we got
-        val page: Paging = new Paging(pageno, 200);
-        val statusesPerPage = twitter.getUserTimeline(screenName, page)
-        statuses.appendAll(statusesPerPage.asScala);
-        System.out.println("total got : " + statuses.size);
-        if (statuses.size == size) break() // we did not get new tweets so we have done the job
-        pageno = pageno+1;
-        sleep(1000); // 900 rqt / 15 mn <=> 1 rqt/s
-      }
-      catch  {
-        case e: TwitterException => println(e.getErrorMessage());
-      }
-    } // while(true)
-  }
-  val num_statuses = statuses.size
-  println("Showing user timeline with number of status updates = " + num_statuses.toString)
-  val it = statuses.iterator
-  while (it.hasNext) {
-    val status = it.next()
-    println(status.getUser.getName + ":" + status.getText);
-  }
-  println("Showing user timeline with number of status updates = " + num_statuses.toString)
+      while(true) {
+        try {
+          println("getting tweets");
+          val size: Int = statuses.size; // actual tweets count we got
+          val page: Paging = new Paging(pageno, 200);
+          val statusesPerPage = twitter.getUserTimeline(screenName, page)
+          statuses.appendAll(statusesPerPage.asScala);
+          System.out.println("total got : " + statuses.size);
+          if (statuses.size == size) break() // we did not get new tweets so we have done the job
+          pageno = pageno+1;
+          sleep(1000); // 900 rqt / 15 mn <=> 1 rqt/s
+        }
+        catch  {
+          case e: TwitterException => println(e.getErrorMessage());
+        }
+      } // end while
+    }// end breakable
+    printTweets(statuses)
   }
 }

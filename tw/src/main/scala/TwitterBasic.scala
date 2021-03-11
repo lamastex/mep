@@ -1,6 +1,8 @@
 import twitter4j.conf.ConfigurationBuilder
 import twitter4j.Twitter
 import twitter4j.TwitterFactory
+import twitter4j.Status
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * A class to handle most basic Twitter config settings.
@@ -25,7 +27,7 @@ class TwitterBasic {
       return new TwitterFactory(cb.build()).getInstance
   }
 
-  def populateFromConfigFile() {
+  def populateFromConfigFile(): Unit = {
       val twconf = com.typesafe.config.ConfigFactory.load()
       APIKey = twconf.getString("TwitterConf.Oauth.APIKey")
       APISecret = twconf.getString("TwitterConf.Oauth.APISecret")
@@ -33,11 +35,22 @@ class TwitterBasic {
       accessTokenSecret = twconf.getString("TwitterConf.Oauth.AccessTokenSecret")
   }
 
-  def sleep(ms: Long) {
+  def sleep(ms: Long): Unit = {
     try { Thread.sleep(ms); }
     catch{
       case intExcpt: InterruptedException => { Thread.currentThread().interrupt(); }
       case _: Throwable => println("Got some other kind of Throwable exception")
     }
+  }
+
+  def printTweets(statuses: ArrayBuffer[Status]): Unit = {
+    val num_statuses = statuses.size
+    println("Showing user timeline with number of status updates = " + num_statuses.toString)
+    val it = statuses.iterator
+    while (it.hasNext) {
+      val status = it.next()
+      println(status.getUser.getName + ":" + status.getText);
+    }
+    println("Just Showed user timeline with number of status updates = " + num_statuses.toString)
   }
 }
