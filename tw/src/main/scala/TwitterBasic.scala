@@ -3,6 +3,7 @@ import twitter4j.Twitter
 import twitter4j.TwitterFactory
 import twitter4j.Status
 import scala.collection.mutable.ArrayBuffer
+import com.google.gson.Gson 
 
 /**
   * A class to handle most basic Twitter config settings.
@@ -43,13 +44,20 @@ class TwitterBasic {
     }
   }
 
+  def statusToGson(status: Status): String = {
+    val gson = new Gson();
+    val statusJson = gson.toJson(status)
+    return statusJson
+  }
+
   def printTweets(statuses: ArrayBuffer[Status]): Unit = {
     val num_statuses = statuses.size
     println("Showing user timeline with number of status updates = " + num_statuses.toString)
     val it = statuses.iterator
     while (it.hasNext) {
       val status = it.next()
-      println(status.getUser.getName + ":" + status.getText);
+      println(status.getUser.getName + ":" + status.getId + ":"+ status.getText);
+      println(statusToGson(status))
     }
     println("Just Showed user timeline with number of status updates = " + num_statuses.toString)
   }
