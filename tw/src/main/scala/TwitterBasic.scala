@@ -1,9 +1,11 @@
 import twitter4j.conf.ConfigurationBuilder
 import twitter4j.Twitter
 import twitter4j.TwitterFactory
+import twitter4j.TwitterException
 import twitter4j.Status
 import scala.collection.mutable.ArrayBuffer
 import com.google.gson.Gson 
+import scala.util.{Try,Success,Failure}
 
 /**
   * A class to handle most basic Twitter config settings.
@@ -43,6 +45,10 @@ class TwitterBasic {
       case _: Throwable => println("Got some other kind of Throwable exception")
     }
   }
+
+  def getStatusFromStatusID(twitter: Twitter, Tweet_ID: Long): Try[Status] = Try {
+      twitter.showStatus(Tweet_ID)
+  } 
 
   def statusToGson(status: Status): String = {
     val gson = new Gson();
