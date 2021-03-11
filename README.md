@@ -14,4 +14,22 @@ root@d9930ca7501d:~# pwd
 root@d9930ca7501d:~# cd GIT/lamastex/mep/
 ```
 
-You may have to change owner to user if the files are created inside the docker container as root: `sudo chown -R user:group *`. Replace `user` and `group` with the right values.
+You may have to change owner to `user` from outside the docker container if:
+
+- the files are created inside the docker container as `root`
+- and you want to use git from outside the container as `user`
+
+```
+$ sudo chown -R user:group *
+```
+Replace `user` and `group` with the right values.
+
+# tw
+
+This is the sbt project folder for Twitter processing using Scala-wrapped twitter4j.
+
+```
+$ cp tw/src/main/resources/application.conf.template tw/src/main/resources/application.conf  
+```
+and put you Twitter developer credentials in `tw/src/main/resources/application.conf`.
+
