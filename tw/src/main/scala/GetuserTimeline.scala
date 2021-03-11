@@ -17,7 +17,7 @@ object getUserTimeline extends TwitterBasic {
     populateFromConfigFile()
     val twitter = getTwitterInstance
     // use the twitter object to get a user's timeline
-    val screenName = "elonmusk"
+    val screenName = "raazozone"
     val statuses = ArrayBuffer[Status]()
     var pageno = 1;
     breakable {
