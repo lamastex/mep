@@ -32,4 +32,12 @@ class TwitterBasic {
       accessToken = twconf.getString("TwitterConf.Oauth.AccessToken")
       accessTokenSecret = twconf.getString("TwitterConf.Oauth.AccessTokenSecret")
   }
+
+  def sleep(ms: Long) {
+    try { Thread.sleep(ms); }
+    catch{
+      case intExcpt: InterruptedException => { Thread.currentThread().interrupt(); }
+      case _: Throwable => println("Got some other kind of Throwable exception")
+    }
+  }
 }
