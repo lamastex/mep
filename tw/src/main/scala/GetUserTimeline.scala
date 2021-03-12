@@ -12,8 +12,6 @@ object getUserTimeline extends TwitterBasic {
   
   def main(args : Array[String]): Unit = {
 
-    // read the config file and create a Twitter instance
-    populateFromConfigFile()
     val twitter = getTwitterInstance
     // use the twitter object to get a user's timeline
     val screenName = "raazozone"

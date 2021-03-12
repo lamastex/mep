@@ -30,31 +30,35 @@ class TwitterBasic {
   var accessTokenSecret = ""
 
   def populateFromConfigFile(): Unit = {
-      val twconf = com.typesafe.config.ConfigFactory.load()
-      APIKey = twconf.getString("TwitterConf.Oauth.APIKey")
-      APISecret = twconf.getString("TwitterConf.Oauth.APISecret")
-      accessToken = twconf.getString("TwitterConf.Oauth.AccessToken")
-      accessTokenSecret = twconf.getString("TwitterConf.Oauth.AccessTokenSecret")
+    val twconf = com.typesafe.config.ConfigFactory.load()
+    APIKey = twconf.getString("TwitterConf.Oauth.APIKey")
+    APISecret = twconf.getString("TwitterConf.Oauth.APISecret")
+    accessToken = twconf.getString("TwitterConf.Oauth.AccessToken")
+    accessTokenSecret = twconf.getString("TwitterConf.Oauth.AccessTokenSecret")
   }
 
   def getTwitterInstance: Twitter = {
-      val cb = new ConfigurationBuilder()
-      cb.setDebugEnabled(true)
-          .setOAuthConsumerKey(APIKey)
-          .setOAuthConsumerSecret(APISecret)
-          .setOAuthAccessToken(accessToken)
-          .setOAuthAccessTokenSecret(accessTokenSecret)
-      return new TwitterFactory(cb.build()).getInstance
+    // read the config file and create a Twitter instance
+    populateFromConfigFile()
+    val cb = new ConfigurationBuilder()
+    cb.setDebugEnabled(true)
+      .setOAuthConsumerKey(APIKey)
+      .setOAuthConsumerSecret(APISecret)
+      .setOAuthAccessToken(accessToken)
+      .setOAuthAccessTokenSecret(accessTokenSecret)
+    return new TwitterFactory(cb.build()).getInstance
   }
 
   def getTwitterStreamInstance: TwitterStream = {
-      val cb = new ConfigurationBuilder()
-      cb.setDebugEnabled(true)
-          .setOAuthConsumerKey(APIKey)
-          .setOAuthConsumerSecret(APISecret)
-          .setOAuthAccessToken(accessToken)
-          .setOAuthAccessTokenSecret(accessTokenSecret)
-      return new TwitterStreamFactory(cb.build()).getInstance
+    // read the config file and create a Twitter instance
+    populateFromConfigFile()
+    val cb = new ConfigurationBuilder()
+    cb.setDebugEnabled(true)
+      .setOAuthConsumerKey(APIKey)
+      .setOAuthConsumerSecret(APISecret)
+      .setOAuthAccessToken(accessToken)
+      .setOAuthAccessTokenSecret(accessTokenSecret)
+    return new TwitterStreamFactory(cb.build()).getInstance
   }
 
   def simpleStatusListener = new StatusListener() {
