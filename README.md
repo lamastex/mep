@@ -42,4 +42,6 @@ root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt "runMain org.lamastex.mep.tw.getSta
 root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt "runMain org.lamastex.mep.tw.StatusStreamer"
 
 root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt "runMain org.lamastex.mep.tw.getUserTimeline"
+
+root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.SearchStreamer "TRUMP IS" "BLM" "WLM"' 
 ```
