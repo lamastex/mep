@@ -6,9 +6,8 @@ object StatusStreamer extends TwitterBasic {
     val twitterStream = getTwitterStreamInstance
     twitterStream.addListener(simpleStatusListener)
     twitterStream.sample
-    Thread.sleep(10000)
-    twitterStream.cleanUp
-    twitterStream.shutdown
+    val stopStreamInMs = T(()=>args(0).toLong).getOrElse(10000L)
+    stopTwitterStreamInstance(twitterStream, stopStreamInMs)
   }
 }
 
@@ -16,9 +15,8 @@ object SearchStreamer extends TwitterBasic {
   def main(args: Array[String]): Unit = {
     val twitterStream = getTwitterStreamInstance
     twitterStream.addListener(simpleStatusListener)
-    twitterStream.filter(new FilterQuery().track(args:_*))
-    Thread.sleep(10000)
-    twitterStream.cleanUp
-    twitterStream.shutdown
+    val stopStreamInMs = T(()=>args(0).toLong).getOrElse(10000L)
+    twitterStream.filter(new FilterQuery().track(args.drop(1):_*))
+    stopTwitterStreamInstance(twitterStream, stopStreamInMs)
   }
 }

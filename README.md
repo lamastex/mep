@@ -39,9 +39,18 @@ After `sbt compile` you can `run` different main methods like this in side the d
 ```
 root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt "runMain org.lamastex.mep.tw.getStatusFromID"
 
+# this will stop in 10 seconds = 10000 milliseconds 
 root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt "runMain org.lamastex.mep.tw.StatusStreamer"
+
+# this will be streaming indefinitely
+root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt "runMain org.lamastex.mep.tw.StatusStreamer -1"
 
 root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt "runMain org.lamastex.mep.tw.getUserTimeline"
 
+# this will stop in 10 seconds = 10000 milliseconds 
 root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.SearchStreamer "TRUMP IS" "BLM" "WLM"' 
+
+# this will be streaming indefinitely
+root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.SearchStreamer -1 "TRUMP IS" "BLM" "ALM"' 
+
 ```

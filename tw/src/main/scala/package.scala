@@ -16,6 +16,19 @@ import scala.util.{Try,Success,Failure}
 
 package object tw {
 
+  def T[A](r: () => A): Option[A] = {
+    try {
+      val x: A = r.apply()
+      x match {
+        case _ if(x == null) => None
+        case p: String => if (p.trim.length == 0) None else Some(p.trim.asInstanceOf[A])
+        case _ => Some(x)
+      }
+    } catch {
+      case _: Throwable => None
+    }
+  }
+
 /**
   * A class to handle most basic Twitter config settings.
   * copy resources/application.conf.template resources/application.conf 
@@ -59,6 +72,14 @@ class TwitterBasic {
       .setOAuthAccessToken(accessToken)
       .setOAuthAccessTokenSecret(accessTokenSecret)
     return new TwitterStreamFactory(cb.build()).getInstance
+  }
+
+  def stopTwitterStreamInstance(twitterStream: TwitterStream, stopAfterMs: Long): Unit = {
+    if(stopAfterMs > 0) {
+      Thread.sleep(stopAfterMs)
+      twitterStream.cleanUp
+      twitterStream.shutdown
+    }
   }
 
   def statusToGson(status: Status): String = {
