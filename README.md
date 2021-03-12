@@ -33,3 +33,13 @@ $ cp tw/src/main/resources/application.conf.template tw/src/main/resources/appli
 ```
 and put you Twitter developer credentials in `tw/src/main/resources/application.conf`.
 
+## sbt
+
+After `sbt compile` you can `run` different main methods like this in side the docker container:
+```
+root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt "runMain org.lamastex.mep.tw.getStatusFromID"
+
+root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt "runMain org.lamastex.mep.tw.StatusStreamer"
+
+root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt "runMain org.lamastex.mep.tw.getUserTimeline"
+```

@@ -1,5 +1,4 @@
 package org.lamastex.mep.tw
-import twitter4j.Twitter
 import twitter4j.Status
 import scala.collection.mutable.ArrayBuffer
 import scala.util.{Try,Success,Failure}

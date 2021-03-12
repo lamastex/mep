@@ -2,8 +2,14 @@ package org.lamastex.mep
 import twitter4j.conf.ConfigurationBuilder
 import twitter4j.Twitter
 import twitter4j.TwitterFactory
+import twitter4j.TwitterStream
+import twitter4j.TwitterStreamFactory
 import twitter4j.TwitterException
 import twitter4j.Status
+import twitter4j.StatusListener
+import twitter4j.StatusDeletionNotice
+import twitter4j.StallWarning
+//import twitter4j.
 import scala.collection.mutable.ArrayBuffer
 import com.google.gson.Gson 
 import scala.util.{Try,Success,Failure}
@@ -23,6 +29,14 @@ class TwitterBasic {
   var accessToken = ""
   var accessTokenSecret = ""
 
+  def populateFromConfigFile(): Unit = {
+      val twconf = com.typesafe.config.ConfigFactory.load()
+      APIKey = twconf.getString("TwitterConf.Oauth.APIKey")
+      APISecret = twconf.getString("TwitterConf.Oauth.APISecret")
+      accessToken = twconf.getString("TwitterConf.Oauth.AccessToken")
+      accessTokenSecret = twconf.getString("TwitterConf.Oauth.AccessTokenSecret")
+  }
+
   def getTwitterInstance: Twitter = {
       val cb = new ConfigurationBuilder()
       cb.setDebugEnabled(true)
@@ -33,12 +47,23 @@ class TwitterBasic {
       return new TwitterFactory(cb.build()).getInstance
   }
 
-  def populateFromConfigFile(): Unit = {
-      val twconf = com.typesafe.config.ConfigFactory.load()
-      APIKey = twconf.getString("TwitterConf.Oauth.APIKey")
-      APISecret = twconf.getString("TwitterConf.Oauth.APISecret")
-      accessToken = twconf.getString("TwitterConf.Oauth.AccessToken")
-      accessTokenSecret = twconf.getString("TwitterConf.Oauth.AccessTokenSecret")
+  def getTwitterStreamInstance: TwitterStream = {
+      val cb = new ConfigurationBuilder()
+      cb.setDebugEnabled(true)
+          .setOAuthConsumerKey(APIKey)
+          .setOAuthConsumerSecret(APISecret)
+          .setOAuthAccessToken(accessToken)
+          .setOAuthAccessTokenSecret(accessTokenSecret)
+      return new TwitterStreamFactory(cb.build()).getInstance
+  }
+
+  def simpleStatusListener = new StatusListener() {
+    def onStatus(status: Status): Unit = { println(status.getText) }
+    def onDeletionNotice(statusDeletionNotice: StatusDeletionNotice): Unit = {}
+    def onTrackLimitationNotice(numberOfLimitedStatuses: Int): Unit = {}
+    def onException(ex: Exception): Unit = { ex.printStackTrace }
+    def onScrubGeo(arg0: Long, arg1: Long) : Unit = {}
+    def onStallWarning(warning: StallWarning) : Unit = {}
   }
 
   def sleep(ms: Long): Unit = {
@@ -74,6 +99,7 @@ class TwitterBasic {
     }
     println("Just Showed user timeline with number of status updates = " + num_statuses.toString)
   }
+
 }
 
 }
