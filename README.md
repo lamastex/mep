@@ -52,5 +52,6 @@ root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.Search
 
 # this will be streaming indefinitely
 root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.SearchStreamer -1 "TRUMP IS" "BLM" "ALM"' 
-
+# this will stream indefinitely and pass JSON lines of tweets to 
+sbt -error 'runMain org.lamastex.mep.tw.SearchStreamer -1 "TRUMP IS" "BLM" "ALM"' 2> work/errors.log | grep '^{.*}$' - 1> work/out
 ```
