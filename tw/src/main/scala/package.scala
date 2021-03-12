@@ -61,8 +61,15 @@ class TwitterBasic {
     return new TwitterStreamFactory(cb.build()).getInstance
   }
 
+  def statusToGson(status: Status): String = {
+    val gson = new Gson();
+    val statusJson = gson.toJson(status)
+    return statusJson
+  }
+
   def simpleStatusListener = new StatusListener() {
-    def onStatus(status: Status): Unit = { println(status.getText) }
+    //def onStatus(status: Status): Unit = { println(status.getText) }
+    def onStatus(status: Status): Unit = { println(statusToGson(status)) }
     def onDeletionNotice(statusDeletionNotice: StatusDeletionNotice): Unit = {}
     def onTrackLimitationNotice(numberOfLimitedStatuses: Int): Unit = {}
     def onException(ex: Exception): Unit = { ex.printStackTrace }
@@ -85,12 +92,6 @@ class TwitterBasic {
   def tryStatusFromStatusID(twitter: Twitter, Tweet_ID: Long): Try[Status] = Try {
       twitter.showStatus(Tweet_ID)
   } 
-
-  def statusToGson(status: Status): String = {
-    val gson = new Gson();
-    val statusJson = gson.toJson(status)
-    return statusJson
-  }
 
   def printTweets(statuses: ArrayBuffer[Status]): Unit = {
     val num_statuses = statuses.size
