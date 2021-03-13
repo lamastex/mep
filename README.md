@@ -69,4 +69,9 @@ root@7bd50f3f9461:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.Follow
 # followIDs Streamer will stream indefinitely following the IDs after -1
 root@7bd50f3f9461:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.FollowIdsStreamer -1 1344951L 3108351L'
 
+# location streamer indefinitely for the default bounding boxes for Sweden and Finland
+root@7bd50f3f9461:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.LocationStreamer -1 '
+
+# location streamer indefinitely for India: https://gist.github.com/graydon/11198540
+sbt 'runMain org.lamastex.mep.tw.LocationStreamer -1 68.1766451354 7.96553477623 97.4025614766 35.4940095078'
 ```

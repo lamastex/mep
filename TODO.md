@@ -1,8 +1,7 @@
 # TODO
 
 
-1.  Add Streaming job collecting status updates related to 
-  - geographical streamer
+1.  Streaming job collecting robust by dealing with other unimplemented methods
 - gracefully start and stop an indefinite stream using daemon to start and stop service...
   - https://flurdy.com/docs/scalainit/startscala.html
 - write parquet from streams

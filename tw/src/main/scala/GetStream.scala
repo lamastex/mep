@@ -42,3 +42,21 @@ object FollowIdsStreamer extends TwitterBasic {
     stopTwitterStreamInstance(twitterStream, stopStreamInMs)
   }
 }
+
+object LocationStreamer extends TwitterBasic {
+  def main(args: Array[String]): Unit = {
+    val twitterStream = getTwitterStreamInstance
+    twitterStream.addListener(simpleStatusListener)
+    val stopStreamInMs = T(()=>args(0).toLong).getOrElse(10000L)
+    // see https://gist.github.com/graydon/11198540
+    val swedenBox = Array(Array(11.0273686052, 55.3617373725),Array(23.9033785336, 69.1062472602))
+    val finlandBox = Array(Array(20.6455928891, 59.846373196),Array(31.5160921567, 70.1641930203))
+    var boundingBoxes = args.drop(1).map( i => T(()=>i.toDouble)  )
+                                  .collect({ case Some(i) => i })
+                                  .grouped(2).toArray
+    if(boundingBoxes.isEmpty || boundingBoxes.size<1) boundingBoxes = swedenBox++finlandBox
+    boundingBoxes.map(x => x.map(println))
+    twitterStream.filter(new FilterQuery().locations(boundingBoxes:_*))
+    stopTwitterStreamInstance(twitterStream, stopStreamInMs)
+  }
+}
