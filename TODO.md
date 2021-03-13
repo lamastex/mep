@@ -1,8 +1,7 @@
 # TODO
 
 
-1.  Streaming job collecting robust by dealing with other unimplemented methods
-- gracefully start and stop an indefinite stream using daemon to start and stop service...
+1. gracefully start and stop an indefinite stream using daemon to start and stop service...
   - https://flurdy.com/docs/scalainit/startscala.html
 - write parquet from streams
   - https://arrow.apache.org/docs/java/

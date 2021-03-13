@@ -75,3 +75,11 @@ root@7bd50f3f9461:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.Locati
 # location streamer indefinitely for India: https://gist.github.com/graydon/11198540
 sbt 'runMain org.lamastex.mep.tw.LocationStreamer -1 68.1766451354 7.96553477623 97.4025614766 35.4940095078'
 ```
+
+# References
+
+This builds upon:
+
+- http://twitter4j.org/en/code-examples.html
+- https://bcomposes.wordpress.com/2013/02/09/using-twitter4j-with-scala-to-access-streaming-tweets/
+- https://github.com/com-lihaoyi/os-lib

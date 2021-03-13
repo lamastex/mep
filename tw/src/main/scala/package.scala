@@ -92,12 +92,24 @@ class TwitterBasic {
 
   def simpleStatusListener = new StatusListener() {
     //def onStatus(status: Status): Unit = { println(status.getText) }
-    def onStatus(status: Status): Unit = { println(statusToGson(status)) }
-    def onDeletionNotice(statusDeletionNotice: StatusDeletionNotice): Unit = {}
-    def onTrackLimitationNotice(numberOfLimitedStatuses: Int): Unit = {}
-    def onException(ex: Exception): Unit = { ex.printStackTrace }
-    def onScrubGeo(arg0: Long, arg1: Long) : Unit = {}
-    def onStallWarning(warning: StallWarning) : Unit = {}
+    def onStatus(status: Status): Unit = { 
+      println(statusToGson(status)) 
+    }
+    def onDeletionNotice(statusDeletionNotice: StatusDeletionNotice): Unit = {
+     System.err.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
+    }
+    def onTrackLimitationNotice(numberOfLimitedStatuses: Int): Unit = {
+      System.err.println("Got track limitation notice:" + numberOfLimitedStatuses);
+    }
+    def onException(ex: Exception): Unit = { 
+      ex.printStackTrace();
+    }
+    def onScrubGeo(userId: Long, upToStatusId: Long) : Unit = {
+      System.err.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
+    }
+    def onStallWarning(warning: StallWarning) : Unit = {
+      System.err.println("Got stall warning:" + warning);
+    }
   }
 
   def sleep(ms: Long): Unit = {
