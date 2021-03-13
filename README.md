@@ -24,6 +24,11 @@ $ sudo chown -R user:group *
 ```
 Replace `user` and `group` with the right values.
 
+stop the docker container:
+```
+$ docker stop mep
+```
+
 # tw
 
 This is the sbt project folder for Twitter processing using Scala-wrapped twitter4j.
@@ -54,4 +59,14 @@ root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.Search
 root@d9930ca7501d:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.SearchStreamer -1 "TRUMP IS" "BLM" "ALM"' 
 # this will stream indefinitely and pass JSON lines of tweets to 
 sbt -error 'runMain org.lamastex.mep.tw.SearchStreamer -1 "TRUMP IS" "BLM" "ALM"' 2> work/errors.log | grep '^{.*}$' - 1> work/out
+
+# followIDs Streamer will stop in 10 seconds
+root@7bd50f3f9461:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.FollowIdsStreamer 10000'
+
+# followIDs Streamer will stream indefinitely
+root@7bd50f3f9461:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.FollowIdsStreamer -1'
+
+# followIDs Streamer will stream indefinitely following the IDs after -1
+root@7bd50f3f9461:~/GIT/lamastex/mep/tw# sbt 'runMain org.lamastex.mep.tw.FollowIdsStreamer -1 1344951L 3108351L'
+
 ```

@@ -41,6 +41,7 @@ class TwitterBasic {
   var APISecret = ""
   var accessToken = ""
   var accessTokenSecret = ""
+  val startTime = System.nanoTime()
 
   def populateFromConfigFile(): Unit = {
     val twconf = com.typesafe.config.ConfigFactory.load()
@@ -76,6 +77,7 @@ class TwitterBasic {
 
   def stopTwitterStreamInstance(twitterStream: TwitterStream, stopAfterMs: Long): Unit = {
     if(stopAfterMs > 0) {
+      System.err.println("Stopping TwitterStreamInstance...")
       Thread.sleep(stopAfterMs)
       twitterStream.cleanUp
       twitterStream.shutdown
@@ -102,7 +104,7 @@ class TwitterBasic {
     try { Thread.sleep(ms); }
     catch{
       case intExcpt: InterruptedException => { Thread.currentThread().interrupt(); }
-      case _: Throwable => println("Got some other kind of Throwable exception")
+      case _: Throwable => System.err.println("Got some other kind of Throwable exception")
     }
   }
 
