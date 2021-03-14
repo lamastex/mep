@@ -78,8 +78,16 @@ sbt 'runMain org.lamastex.mep.tw.LocationStreamer -1 68.1766451354 7.96553477623
 
 # References
 
-This builds upon:
+## Libraries used
 
-- http://twitter4j.org/en/code-examples.html
-- https://bcomposes.wordpress.com/2013/02/09/using-twitter4j-with-scala-to-access-streaming-tweets/
-- https://github.com/com-lihaoyi/os-lib
+- twitter4j
+  - https://github.com/Twitter4J/Twitter4J
+  - http://twitter4j.org/en/code-examples.html
+  - https://bcomposes.wordpress.com/2013/02/09/using-twitter4j-with-scala-to-access-streaming-tweets/
+- os-lib
+  - https://github.com/com-lihaoyi/os-lib
+
+## Libraries for potential use:
+
+- https://github.com/apache/bahir
+  - https://github.com/apache/bahir/tree/master/streaming-twitter
