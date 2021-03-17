@@ -15,7 +15,8 @@ object getStatusFromID extends TwitterBasic {
     var Tweet_ID: Long = 689614253028839424L //
 
     val wd = os.pwd / "work"
-    val fileRoot = "tweetIDs"
+    //val fileRoot = "tweetIDs"
+    val fileRoot = T(()=>args(0)).getOrElse("tweetIDs")
     val inputTweetIDs = fileRoot+".txt"
     val outputTweets = fileRoot+".JSON"
     // Streaming the lines to the console
@@ -28,13 +29,20 @@ object getStatusFromID extends TwitterBasic {
       tryStringToLong(line) match {
         case Success(id) => { 
           Tweet_ID = id;
-          tryStatusFromStatusID(twitter, Tweet_ID) match {
+          //sleep(1000); // 900 rqt / 15 mn <=> 1 rqt/s
+          val status = tryStatusFromStatusID(twitter, Tweet_ID)
+          // need to be more clever about avoiding rate-limits for large downloads - bailing to twarc for now
+          if (status.isSuccess) {
+              statusGSON = statusToGson(status.get)
+              os.write.append(wd / outputTweets,statusGSON+"\n")
+            }
+          /*tryStatusFromStatusID(twitter, Tweet_ID) match {
             case Success(s) => {
               statusGSON = statusToGson(s)
               os.write.append(wd / outputTweets,statusGSON+"\n")
             }
             case Failure(s) => println(s"Failed. Reason: $s")
-          }
+          }*/
         }  
         case Failure(e) => println(s"Failed. Reason: $e")
         }
