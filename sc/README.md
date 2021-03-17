@@ -16,7 +16,7 @@ root@d9930ca7501d:~# cd GIT/lamastex/mep/
 
 You may have to change owner to `user` from outside the docker container if:
 
-- the files are created inside the docker container as `root`
+-  The files are created inside the docker container as `root`
 - and you want to use git from outside the container as `user`
 
 ```
