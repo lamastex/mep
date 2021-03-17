@@ -8,7 +8,7 @@ Project MEP: Meme Evolution programme. A python toolkit to do statistical experi
 This is for python dev environment for the following packages:
 
 - [twarc](https://github.com/DocNow/twarc)
-- [mep](https://github.com/lamastex/mep/py/twarc)
+- [mep/py/twarc](./)
 
 See https://github.com/lamastex/dockerDev for details on docker builds.
 
