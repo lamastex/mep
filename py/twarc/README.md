@@ -14,7 +14,14 @@ See https://github.com/lamastex/dockerDev for details on docker builds.
 
 ### Use
 
-In interactive mode after starting daemon mode with environment variables in `env.list` file.
+Set the environment variables in file named `env.list` with your Twitter Developer Credentials:
+
+```
+$ cp env.list.template env.list
+$ vi env.list
+```
+
+Run `twarc` in command-line inside a mounted docker container named `mep-pytwarc` in interactive mode after starting it in daemon mode with environment variables in `env.list` file as follows:
 
 ```
 docker pull lamastex/python-twarc:latest
