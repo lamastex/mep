@@ -5,7 +5,7 @@ import twitter4j.Paging
 import twitter4j.Status
 import twitter4j.conf.ConfigurationBuilder
 import scala.collection.mutable.ArrayBuffer
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 import scala.util.control.Breaks._
 
 object getUserTimeline extends TwitterBasic {
