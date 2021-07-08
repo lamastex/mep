@@ -100,40 +100,40 @@ class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Lo
 }
 
 //class AsyncWrite(buffer: Iterator[String], filename: String) extends Runnable {
-  class AsyncWrite(streamer: BufferedTwitterStream, filename: String) extends Runnable {
-    override def run(): Unit = {
-      val filenameWithTime = filename + java.time.Instant.now.getEpochSecond.toString + ".csv"
-      val buffer = streamer.getBuffer()
-      val filewriter = new FileWriter(new File(filenameWithTime))
-      var tweetsWritten = 0
-      while(buffer.hasNext) {
-        filewriter.write(buffer.next + "\n")
-        tweetsWritten = tweetsWritten + 1
-      }
-      filewriter.close()
-      printf("%d tweets written to %s\n", tweetsWritten, filenameWithTime)
+class AsyncWrite(streamer: BufferedTwitterStream, filename: String) extends Runnable {
+  override def run(): Unit = {
+    val filenameWithTime = filename + java.time.Instant.now.getEpochSecond.toString + ".csv"
+    val buffer = streamer.getBuffer()
+    val filewriter = new FileWriter(new File(filenameWithTime))
+    var tweetsWritten = 0
+    while(buffer.hasNext) {
+      filewriter.write(buffer.next + "\n")
+      tweetsWritten = tweetsWritten + 1
     }
+    filewriter.close()
+    printf("%d tweets written to %s\n", tweetsWritten, filenameWithTime)
   }
+}
   
-  object RunThreadedStreamWithWrite {
-    def main(args : Array[String]): Unit = {
-      val pool = Executors.newFixedThreadPool(2)
-      
-      var buffer: Iterator[String] = Iterator.empty
-      
-      val streamer = new BufferedTwitterStream(buffer)
-      
-      pool.submit(streamer)
-      
-      Thread.sleep(20000L)
-      //pool.submit(new AsyncWrite(streamer.getBuffer, "tmp/test1.csv"))
-      pool.submit(new AsyncWrite(streamer, "tmp/test1.csv"))
-      
-      Thread.sleep(20000L)
-      //pool.submit(new AsyncWrite(streamer.getBuffer, "tmp/test2.csv"))
-      pool.submit(new AsyncWrite(streamer, "tmp/test1.csv"))
-      
-      pool.shutdown()
-      pool.awaitTermination(20, TimeUnit.SECONDS)
-    }
+object RunThreadedStreamWithWrite {
+  def main(args : Array[String]): Unit = {
+    val pool = Executors.newFixedThreadPool(2)
+    
+    var buffer: Iterator[String] = Iterator.empty
+    
+    val streamer = new BufferedTwitterStream(buffer)
+    
+    pool.submit(streamer)
+    
+    Thread.sleep(20000L)
+    //pool.submit(new AsyncWrite(streamer.getBuffer, "tmp/test1.csv"))
+    pool.submit(new AsyncWrite(streamer, "tmp/test1.csv"))
+    
+    Thread.sleep(20000L)
+    //pool.submit(new AsyncWrite(streamer.getBuffer, "tmp/test2.csv"))
+    pool.submit(new AsyncWrite(streamer, "tmp/test1.csv"))
+    
+    pool.shutdown()
+    pool.awaitTermination(20, TimeUnit.SECONDS)
   }
+}

@@ -39,17 +39,17 @@ class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], stopStreamInMs
 }
 
 class AsyncWriteReturnWritten(buffer: Iterator[String], filename: String) extends Callable[Int] {
-    override def call(): Int = {
-        val filewriter = new FileWriter(new File(filename))
-        var tweetsWritten = 0
-        while(buffer.hasNext) {
-            filewriter.write(buffer.next)
-            tweetsWritten = tweetsWritten + 1
-        }
-        filewriter.close()
-        printf("%d tweets written to %s\n", tweetsWritten, filename)
-        tweetsWritten
+  override def call(): Int = {
+    val filewriter = new FileWriter(new File(filename))
+    var tweetsWritten = 0
+    while(buffer.hasNext) {
+      filewriter.write(buffer.next)
+      tweetsWritten = tweetsWritten + 1
     }
+    filewriter.close()
+    printf("%d tweets written to %s\n", tweetsWritten, filename)
+    tweetsWritten
+  }
 }
 
 class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
@@ -61,28 +61,25 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
       file <- files if file.getName.endsWith(".csv")
     } file.delete()
 
+    // get Handles to track
+    val handleFilename = "src/test/resources/trackedHandles.txt"
+    val handleReader = scala.io.Source.fromFile(handleFilename)
+    val handlesToTrack: Seq[String] = handleReader.getLines.toSeq
+    handleReader.close
+
     val pool = Executors.newScheduledThreadPool(2)
     val stopStreamInS = 40
 
     var buffer: Iterator[String] = Iterator.empty
 
     val streamer = new BufferedTwitterStreamTest(buffer, stopStreamInS * 1000L)
+    streamer.setUsersToTrack(handlesToTrack)
 
     pool.submit(streamer)
 
     val writeJob = new AsyncWrite(streamer, "tmp/async")
 
-    pool.scheduleAtFixedRate(writeJob, 10L, 10L, TimeUnit.SECONDS)
-
-/*     Thread.sleep(10000L)
-    tweetsWrittenAsync = tweetsWrittenAsync + pool.submit[Int](
-      new AsyncWriteReturnWritten(streamer.getBuffer, "tmp/test1.csv"),
-    ).get()
-
-    Thread.sleep(5000L)
-    tweetsWrittenAsync = tweetsWrittenAsync + pool.submit[Int](
-      new AsyncWriteReturnWritten(streamer.getBuffer, "tmp/test2.csv"),
-    ).get() */
+    pool.scheduleAtFixedRate(writeJob, 20L, 10L, TimeUnit.SECONDS)
 
     Thread.sleep(stopStreamInS * 1000)
 
