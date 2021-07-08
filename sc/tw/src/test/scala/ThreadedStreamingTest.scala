@@ -57,9 +57,10 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
         handlesToTrack = handlesToTrack :+ line
       }
       handleReader.close
+      printf("%d handles to track\n", handlesToTrack.size)
+    } catch {
+      case e: FileNotFoundException => println(handleFilename + " not found!")
     }
-    
-    printf("%d handles to track\n", handlesToTrack.size)
 
     val pool = Executors.newScheduledThreadPool(2)
     val stopStreamInS = 40
@@ -67,9 +68,12 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     var buffer: Iterator[String] = Iterator.empty
 
     val streamer = new BufferedTwitterStreamTest(buffer, stopStreamInS * 1000L)
-    println("getting ids to track...")
-    val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)
-    printf("%d ids tracked\n", idsToTrack.size)
+    if (handlesToTrack.size > 0) {
+      println("getting ids to track...")
+      val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)
+      printf("%d ids tracked\n", idsToTrack.size)
+    }
+    
 
     streamer.setIdsToTrack(idsToTrack)
 
