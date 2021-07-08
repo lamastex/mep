@@ -6,14 +6,15 @@ import java.io.{File,FileWriter}
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.Date
 
 class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], val stopStreamInMs: Long) extends BufferedTwitterStream(volatileBuffer) {
 
-  var seqBuffer: Seq[String] = Seq.empty
+  var tweetsRead = 0
 
   override def handleStatus(status: Status): Unit = {
     buffer = buffer ++ Iterator(statusToGson(status))
-    seqBuffer = seqBuffer :+ statusToGson(status)
+    tweetsRead = tweetsRead + 1
   }
 
   override def stopTwitterStreamInstance(twitterStream: TwitterStream, stopAfterMs: Long): Unit = {
@@ -26,13 +27,13 @@ class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], val stopStream
       val filename = "tmp/remaingTweets.csv"
       val filewriter = new FileWriter(new File(filename))
       while (buffer.hasNext) {
-        filewriter.write(buffer.next())
+        filewriter.write(buffer.next() + "\n")
         remTweets = remTweets + 1
       }
       filewriter.close()
       printf("%d tweets written to %s\n", remTweets, filename)
-      printf("Total number of received tweets: %d\n", seqBuffer.size)
-      printf("Tweets to be written Async: %d\n", seqBuffer.size - remTweets)
+      printf("Total number of received tweets: %d\n", tweetsRead)
+      printf("Tweets to be written Async: %d\n", tweetsRead - remTweets)
     }
   }
 
@@ -61,28 +62,44 @@ class AsyncWriteReturnWritten(buffer: Iterator[String], filename: String) extend
 
 class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
   test("Threaded Streaming") {
-    val pool = Executors.newFixedThreadPool(2)
-    val stopStreamInMs = 20 * 1000L
-    var tweetsWrittenAsync = 0
+
+    // Clean tmp directory
+    for {
+      files <- Option(new File("tmp/").listFiles)
+      file <- files if file.getName.endsWith(".csv")
+    } file.delete()
+
+    val pool = Executors.newScheduledThreadPool(2)
+    val stopStreamInS = 40
 
     var buffer: Iterator[String] = Iterator.empty
 
-    val streamer = new BufferedTwitterStreamTest(buffer, stopStreamInMs)
+    val streamer = new BufferedTwitterStreamTest(buffer, stopStreamInS * 1000L)
 
     pool.submit(streamer)
 
-    Thread.sleep(8000L)
-    tweetsWrittenAsync = tweetsWrittenAsync + pool.submit(
-      new AsyncWriteReturnWritten(streamer.getBuffer, "tmp/test1.csv")
+    val writeJob = new AsyncWrite(streamer, "tmp/async")
+
+    pool.scheduleAtFixedRate(writeJob, 10L, 10L, TimeUnit.SECONDS)
+
+/*     Thread.sleep(10000L)
+    tweetsWrittenAsync = tweetsWrittenAsync + pool.submit[Int](
+      new AsyncWriteReturnWritten(streamer.getBuffer, "tmp/test1.csv"),
     ).get()
 
     Thread.sleep(5000L)
-    tweetsWrittenAsync = tweetsWrittenAsync + pool.submit(
-      new AsyncWriteReturnWritten(streamer.getBuffer, "tmp/test2.csv")
-    ).get()
+    tweetsWrittenAsync = tweetsWrittenAsync + pool.submit[Int](
+      new AsyncWriteReturnWritten(streamer.getBuffer, "tmp/test2.csv"),
+    ).get() */
+
+    Thread.sleep(stopStreamInS * 1000)
 
     pool.shutdown()
-    pool.awaitTermination(20, TimeUnit.SECONDS)
+    pool.awaitTermination(stopStreamInS*2, TimeUnit.SECONDS)
+    val tweetsWrittenAsync = Option(new File("tmp/").listFiles().toSeq)
+      .getOrElse(Seq.empty)
+      .map(file => io.Source.fromFile(file).getLines.size)
+      .sum
     printf("Tweets written Async: %d\n", tweetsWrittenAsync)
   }
 }

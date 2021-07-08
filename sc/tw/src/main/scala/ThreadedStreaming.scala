@@ -49,7 +49,7 @@ class BufferedTwitterStream(var buffer: Iterator[String]) extends TwitterBasic w
       val filename = "tmp/remaingTweets.csv"
       val filewriter = new FileWriter(new File(filename))
       while (buffer.hasNext) {
-        filewriter.write(buffer.next())
+        filewriter.write(buffer.next() + "\n")
         remTweets = remTweets + 1
       }
       filewriter.close()
@@ -72,16 +72,19 @@ class BufferedTwitterStream(var buffer: Iterator[String]) extends TwitterBasic w
 
 }
 
-class AsyncWrite(buffer: Iterator[String], filename: String) extends Runnable {
+//class AsyncWrite(buffer: Iterator[String], filename: String) extends Runnable {
+class AsyncWrite(streamer: BufferedTwitterStream, filename: String) extends Runnable {
     override def run(): Unit = {
-        val filewriter = new FileWriter(new File(filename))
+        val filenameWithTime = filename + java.time.Instant.now.getEpochSecond.toString + ".csv"
+        val buffer = streamer.getBuffer()
+        val filewriter = new FileWriter(new File(filenameWithTime))
         var tweetsWritten = 0
         while(buffer.hasNext) {
-            filewriter.write(buffer.next)
+            filewriter.write(buffer.next + "\n")
             tweetsWritten = tweetsWritten + 1
         }
         filewriter.close()
-        printf("%d tweets written to %s\n", tweetsWritten, filename)
+        printf("%d tweets written to %s\n", tweetsWritten, filenameWithTime)
     }
 }
 
@@ -96,10 +99,12 @@ object RunThreadedStreamWithWrite {
         pool.submit(streamer)
 
         Thread.sleep(20000L)
-        pool.submit(new AsyncWrite(streamer.getBuffer, "tmp/test1.csv"))
+        //pool.submit(new AsyncWrite(streamer.getBuffer, "tmp/test1.csv"))
+        pool.submit(new AsyncWrite(streamer, "tmp/test1.csv"))
 
         Thread.sleep(20000L)
-        pool.submit(new AsyncWrite(streamer.getBuffer, "tmp/test2.csv"))
+        //pool.submit(new AsyncWrite(streamer.getBuffer, "tmp/test2.csv"))
+        pool.submit(new AsyncWrite(streamer, "tmp/test1.csv"))
 
         pool.shutdown()
         pool.awaitTermination(20, TimeUnit.SECONDS)
