@@ -8,7 +8,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.Date
 
-class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], val stopStreamInMs: Long) extends BufferedTwitterStream(volatileBuffer) {
+class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], stopStreamInMs: Long) extends BufferedTwitterStream(volatileBuffer, stopStreamInMs) {
 
   var tweetsRead = 0
 
@@ -24,7 +24,7 @@ class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], val stopStream
       twitterStream.cleanUp
       twitterStream.shutdown
       var remTweets = 0
-      val filename = "tmp/remaingTweets.csv"
+      val filename = "tmp/remainingTweets.csv"
       val filewriter = new FileWriter(new File(filename))
       while (buffer.hasNext) {
         filewriter.write(buffer.next() + "\n")
@@ -36,14 +36,6 @@ class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], val stopStream
       printf("Tweets to be written Async: %d\n", tweetsRead - remTweets)
     }
   }
-
-  override def run(): Unit = {
-    val twitterStream = getTwitterStreamInstance
-    twitterStream.addListener(simpleStatusListener)
-    twitterStream.sample
-    stopTwitterStreamInstance(twitterStream, stopStreamInMs)
-  }
-
 }
 
 class AsyncWriteReturnWritten(buffer: Iterator[String], filename: String) extends Callable[Int] {
