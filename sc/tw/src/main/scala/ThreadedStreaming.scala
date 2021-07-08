@@ -14,10 +14,10 @@ import twitter4j.FilterQuery
 
 class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Long = 60000L) extends TwitterBasic with Runnable {
   
-  var usersToTrack: Seq[String] = Seq.empty
-  
-  def setUsersToTrack(toTrack: Seq[String]): Unit = {
-    usersToTrack = toTrack
+  var idsToTrack: Seq[Long] = Seq.empty
+
+  def setIdsToTrack(ids: Seq[Long]): Unit = {
+    idsToTrack = ids
   }
   
   def handleStatus(status: Status): Unit = {
@@ -77,7 +77,7 @@ class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Lo
     } yield user     
   }
 
-  def getValidTrackedUserIds = lookupUserSNs(usersToTrack)
+  def getValidTrackedUserIds(handles: Seq[String]) = lookupUserSNs(handles)
     .map(u => u.getId())
     .toSet
     .toSeq
@@ -86,12 +86,11 @@ class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Lo
   override def run(): Unit = {
     val twitterStream = getTwitterStreamInstance
     twitterStream.addListener(simpleStatusListener)
-    if (usersToTrack.isEmpty) {
+    if (idsToTrack.isEmpty) {
       twitterStream.sample
     } else {
-      val trackedIds = getValidTrackedUserIds
       val query = new FilterQuery()
-      query.follow(trackedIds: _*)
+      query.follow(idsToTrack: _*)
       twitterStream.filter(query)
     }
     stopTwitterStreamInstance(twitterStream, stopStreamInMs)

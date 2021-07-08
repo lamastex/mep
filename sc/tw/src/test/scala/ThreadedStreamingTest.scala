@@ -38,20 +38,6 @@ class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], stopStreamInMs
   }
 }
 
-class AsyncWriteReturnWritten(buffer: Iterator[String], filename: String) extends Callable[Int] {
-  override def call(): Int = {
-    val filewriter = new FileWriter(new File(filename))
-    var tweetsWritten = 0
-    while(buffer.hasNext) {
-      filewriter.write(buffer.next)
-      tweetsWritten = tweetsWritten + 1
-    }
-    filewriter.close()
-    printf("%d tweets written to %s\n", tweetsWritten, filename)
-    tweetsWritten
-  }
-}
-
 class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
   test("Threaded Streaming") {
 
@@ -66,6 +52,7 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     val handleReader = scala.io.Source.fromFile(handleFilename)
     val handlesToTrack: Seq[String] = handleReader.getLines.toSeq
     handleReader.close
+    printf("%d handles to track\n", handlesToTrack.size)
 
     val pool = Executors.newScheduledThreadPool(2)
     val stopStreamInS = 40
@@ -73,7 +60,11 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     var buffer: Iterator[String] = Iterator.empty
 
     val streamer = new BufferedTwitterStreamTest(buffer, stopStreamInS * 1000L)
-    streamer.setUsersToTrack(handlesToTrack)
+    println("getting ids to track...")
+    val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)
+    printf("%d ids tracked\n", idsToTrack.size)
+
+    streamer.setIdsToTrack(idsToTrack)
 
     pool.submit(streamer)
 
