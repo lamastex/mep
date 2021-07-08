@@ -96,7 +96,7 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
 
     pool.shutdown()
     pool.awaitTermination(stopStreamInS*2, TimeUnit.SECONDS)
-    val tweetsWrittenAsync = Option(new File("tmp/").listFiles().toSeq)
+    val tweetsWrittenAsync = Option(new File("tmp/").listFiles().toSeq.filter(_.getName().contains("async")))
       .getOrElse(Seq.empty)
       .map(file => io.Source.fromFile(file).getLines.size)
       .sum
