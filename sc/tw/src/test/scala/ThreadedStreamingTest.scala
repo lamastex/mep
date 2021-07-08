@@ -59,7 +59,7 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
       handleReader.close
       printf("%d handles to track\n", handlesToTrack.size)
     } catch {
-      case e: FileNotFoundException => println(handleFilename + " not found!")
+      case _ => println(handleFilename + " not found!")
     }
 
     val pool = Executors.newScheduledThreadPool(2)
