@@ -68,11 +68,12 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     var buffer: Iterator[String] = Iterator.empty
 
     val streamer = new BufferedTwitterStreamTest(buffer, stopStreamInS * 1000L)
-    if (handlesToTrack.size > 0) {
+    val idsToTrack: Seq[Long] = if (handlesToTrack.size > 0) {
       println("getting ids to track...")
       val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)
       printf("%d ids tracked\n", idsToTrack.size)
-    }
+      idsToTrack
+    } else Seq.empty
     
 
     streamer.setIdsToTrack(idsToTrack)
