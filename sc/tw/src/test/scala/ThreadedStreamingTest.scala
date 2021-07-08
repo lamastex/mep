@@ -50,7 +50,10 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     // get Handles to track
     val handleFilename = "src/test/resources/trackedHandles.txt"
     val handleReader = scala.io.Source.fromFile(handleFilename)
-    val handlesToTrack: Seq[String] = handleReader.getLines.toSeq
+    var handlesToTrack: Seq[String] = Seq.empty
+    for {line <- handleReader.getLines} {
+      handlesToTrack = handlesToTrack :+ line
+    }
     handleReader.close
     printf("%d handles to track\n", handlesToTrack.size)
 
