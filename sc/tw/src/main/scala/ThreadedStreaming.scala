@@ -54,7 +54,7 @@ class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Lo
       twitterStream.cleanUp
       twitterStream.shutdown
       var remTweets = 0
-      val filename = "tmp/remaingTweets" + java.time.Instant.now.getEpochSecond.toString + ".csv"
+      val filename = "tmp/remainingTweets" + java.time.Instant.now.getEpochSecond.toString + ".csv"
       val filewriter = new FileWriter(new File(filename))
       while (buffer.hasNext) {
         filewriter.write(buffer.next() + "\n")
@@ -98,7 +98,6 @@ class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Lo
   
 }
 
-//class AsyncWrite(buffer: Iterator[String], filename: String) extends Runnable {
 class AsyncWrite(streamer: BufferedTwitterStream, filename: String) extends Runnable {
   override def run(): Unit = {
     val filenameWithTime = filename + java.time.Instant.now.getEpochSecond.toString + ".csv"
