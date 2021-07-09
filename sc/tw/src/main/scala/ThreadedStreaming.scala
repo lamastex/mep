@@ -96,15 +96,13 @@ class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Lo
     }
     stopTwitterStreamInstance(twitterStream, stopStreamInMs)
   }
-  
 }
 
-// A class to write the buffered stream asynchronously.
-class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeBytes: Long = 3 * 1024 * 1024L) extends Runnable {
-  
+object IOHelper {
+
   // Estimate of byte size of one tweet.
   // Average size estimated as ~4000 B,
-  // get 4096 with a little headroom
+  // 4096 with a little headroom
   final val TWEETSIZE = 4096
 
   // Returns the file with the largest name w.r.t. string comparison
@@ -134,20 +132,23 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
     printf("%d bytes written to %s\n", bytesWritten, file)
     return buffer
   }
-  
+}
+
+// A class to write the buffered stream asynchronously.
+class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeBytes: Long = 3 * 1024 * 1024L) extends Runnable {
   override def run(): Unit = {
     val filePath = {
       val pathArray = filename.split('/').dropRight(1)
       pathArray.tail.foldLeft(pathArray.head)(_ + "/" + _)
     }
-    val lastFile = getLastFile(filePath)
+    val lastFile = IOHelper.getLastFile(filePath)
     println("last file: " + lastFile.getOrElse(None).toString)
 
     var filenameWithTime = ""
     var fileSize = 0L
     var append = false
     // Only write to the last file if it exists and is not full
-    if (lastFile.isDefined && lastFile.get.length < maxFileSizeBytes - TWEETSIZE) {
+    if (lastFile.isDefined && lastFile.get.length < maxFileSizeBytes - IOHelper.TWEETSIZE) {
       filenameWithTime = lastFile.get.getPath
       fileSize = lastFile.get.length
       append = true
@@ -158,7 +159,7 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
     val buffer = streamer.getBuffer()
 
     // Writing into the last file
-    writeBufferToFile(
+    IOHelper.writeBufferToFile(
       filenameWithTime, 
       buffer, 
       maxFileSizeBytes - fileSize, 
@@ -167,11 +168,11 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
 
     // When the last file is full, write the rest into new files
     while(buffer.hasNext) {
-      writeBufferToFile(
+      IOHelper.writeBufferToFile(
         filename + java.time.Instant.now.getEpochSecond.toString + ".csv",
         buffer,
         maxFileSizeBytes
-        )
+      )
     }
   }
 }
