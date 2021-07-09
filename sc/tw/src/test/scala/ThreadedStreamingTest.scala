@@ -8,6 +8,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.Date
 import java.io.FileNotFoundException
+import scala.io.Source
 
 class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], stopStreamInMs: Long) extends BufferedTwitterStream(volatileBuffer, stopStreamInMs) {
 
@@ -36,6 +37,41 @@ class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], stopStreamInMs
       printf("Total number of received tweets: %d\n", tweetsRead)
       printf("Tweets to be written Async: %d\n", tweetsRead - remTweets)
     }
+  }
+}
+
+class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
+  val rootPath = "src/test/resources/"
+
+  test("Get last file") {
+    val lastFile = IOHelper.getLastFile(rootPath)
+    assert(lastFile.isDefined)
+    assert(lastFile.get.getName == "zzz.test")
+  }
+
+  test("Write buffer") {
+    val source = Source.fromFile(rootPath + "testTweets.jsonl")
+    val testTweetsSeq = source.getLines.toSeq
+
+    val testTweetsIter = testTweetsSeq.toIterator
+
+    val testDir = new File(rootPath + "test")
+    testDir.mkdir()
+
+    val testFile = rootPath + "test/test.jsonl"
+    IOHelper.writeBufferToFile(
+      testFile, 
+      testTweetsIter, 
+      10*1024*1024L
+    )
+
+    val compareSource = Source.fromFile(testFile)
+    assert(compareSource.getLines.toSeq == testTweetsSeq)
+    
+    new File(testFile).delete
+    testDir.delete
+    source.close
+    compareSource.close
   }
 }
 
