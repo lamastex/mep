@@ -7,6 +7,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.Date
+import java.io.FileNotFoundException
 
 class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], stopStreamInMs: Long) extends BufferedTwitterStream(volatileBuffer, stopStreamInMs) {
 
@@ -59,11 +60,11 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
       handleReader.close
       printf("%d handles to track\n", handlesToTrack.size)
     } catch {
-      case _ => println(handleFilename + " not found!")
+      case e: FileNotFoundException => println(handleFilename + " not found!")
     }
 
     val pool = Executors.newScheduledThreadPool(2)
-    val stopStreamInS = 40
+    val stopStreamInS = 70
 
     var buffer: Iterator[String] = Iterator.empty
 
@@ -82,7 +83,7 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
 
     val writeJob = new AsyncWrite(streamer, "tmp/async")
 
-    pool.scheduleAtFixedRate(writeJob, 20L, 10L, TimeUnit.SECONDS)
+    pool.scheduleAtFixedRate(writeJob, 20L, 20L, TimeUnit.SECONDS)
 
     Thread.sleep(stopStreamInS * 1000)
 
