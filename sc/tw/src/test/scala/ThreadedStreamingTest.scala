@@ -64,7 +64,9 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     }
 
     val pool = Executors.newScheduledThreadPool(2)
-    val stopStreamInS = 70
+    val stopStreamInS = 70L
+    val writeDelayInS = 20L // Delay before starting write job
+    val writeRateInS = 20L  // Delay between write jobs 
 
     var buffer: Iterator[String] = Iterator.empty
 
@@ -76,15 +78,16 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
       idsToTrack
     } else Seq.empty
     
-
     streamer.setIdsToTrack(idsToTrack)
 
+    // Start the Twitter stream
     pool.submit(streamer)
 
+    // Create and start write jobs
     val writeJob = new AsyncWrite(streamer, "tmp/async")
+    pool.scheduleAtFixedRate(writeJob, writeDelayInS, writeRateInS, TimeUnit.SECONDS)
 
-    pool.scheduleAtFixedRate(writeJob, 20L, 20L, TimeUnit.SECONDS)
-
+    // Wait until stream has finished
     Thread.sleep(stopStreamInS * 1000)
 
     pool.shutdown()

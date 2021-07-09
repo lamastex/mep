@@ -99,6 +99,7 @@ class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Lo
   
 }
 
+// A class to write the buffered stream asynchronously.
 class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeBytes: Long = 3 * 1024 * 1024L) extends Runnable {
   
   // Estimate of byte size of one tweet.
@@ -106,6 +107,7 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
   // get 4096 with a little headroom
   final val TWEETSIZE = 4096
 
+  // Returns the file with the largest name w.r.t. string comparison
   def getLastFile(path: String): Option[File] = {
     val files = Option(new File(path).listFiles)
     if (files.isDefined && files.get.nonEmpty) {
@@ -116,10 +118,10 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
   def writeBufferToFile(
     file: String, 
     buffer: Iterator[String], 
-    allowedBytes: Long, 
+    allowedBytes: Long, // max Bytes written to the file
     append: Boolean = false
   ): Iterator[String] = {
-    println("Will try to write to " + file)
+    println("Writing to " + file)
     val writer = new FileWriter(new File(file), append)
     var bytesWritten = 0L
     var nextLine = ""
@@ -138,13 +140,13 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
       val pathArray = filename.split('/').dropRight(1)
       pathArray.tail.foldLeft(pathArray.head)(_ + "/" + _)
     }
-    println("Using filepath " + filePath)
     val lastFile = getLastFile(filePath)
-    println("lastFile: " + lastFile.getOrElse(None).toString)
+    println("last file: " + lastFile.getOrElse(None).toString)
 
     var filenameWithTime = ""
     var fileSize = 0L
     var append = false
+    // Only write to the last file if it exists and is not full
     if (lastFile.isDefined && lastFile.get.length < maxFileSizeBytes - TWEETSIZE) {
       filenameWithTime = lastFile.get.getPath
       fileSize = lastFile.get.length
@@ -152,11 +154,10 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
     } else {
       filenameWithTime = filename + java.time.Instant.now.getEpochSecond.toString + ".csv"
     }
-    var buffer = streamer.getBuffer()
-    /* val filewriter = new FileWriter(new File(filenameWithTime), append)
-    var tweetsWritten = 0
-    var nextLine = ""
-    var lineSize = 0 */
+
+    val buffer = streamer.getBuffer()
+
+    // Writing into the last file
     writeBufferToFile(
       filenameWithTime, 
       buffer, 
@@ -164,35 +165,19 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
       append
     )
 
+    // When the last file is full, write the rest into new files
     while(buffer.hasNext) {
-      /* nextLine = buffer.next + "\n"
-      lineSize = nextLine.getBytes.length */
-      /*if (fileSize + lineSize > maxFileSizeBytes) {
-        // Write into a new file instead
-        filewriter.close()
-        printf("%d tweets written to %s (size %d B)\n", tweetsWritten, filenameWithTime, fileSize)
-        filenameWithTime = filename + java.time.Instant.now.getEpochSecond.toString + ".csv"
-        filewriter = new FileWriter(new File(filenameWithTime))
-        fileSize = 0L
-        tweetsWritten = 0
-      }*/
-
       writeBufferToFile(
         filename + java.time.Instant.now.getEpochSecond.toString + ".csv",
         buffer,
         maxFileSizeBytes
         )
-      
-      /* filewriter.write(nextLine)
-      tweetsWritten = tweetsWritten + 1
-      fileSize += nextLine.getBytes.length */
     }
-    //filewriter.close()
-    //printf("%d tweets written to %s (size %d B)\n", tweetsWritten, filenameWithTime, fileSize)
   }
 }
   
-object RunThreadedStreamWithWrite {
+// Obsolete
+/* object RunThreadedStreamWithWrite {
   def main(args : Array[String]): Unit = {
     val pool = Executors.newFixedThreadPool(2)
     
@@ -213,4 +198,4 @@ object RunThreadedStreamWithWrite {
     pool.shutdown()
     pool.awaitTermination(20, TimeUnit.SECONDS)
   }
-}
+} */
