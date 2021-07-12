@@ -12,6 +12,7 @@ import twitter4j.StallWarning
 import scala.collection.JavaConverters._
 import twitter4j.FilterQuery
 import os.read
+import java.io.FileNotFoundException
 
 /*  A class that reads a Twitter stream into a buffer
  *  buffer: The buffer to save tweets into.
@@ -226,7 +227,7 @@ object ThreadedTwitterStreamWithWrite {
 
     var buffer: Iterator[String] = Iterator.empty
 
-    val streamer = new BufferedTwitterStreamTest(buffer, stopStreamInS * 1000L)
+    val streamer = new BufferedTwitterStream(buffer, stopStreamInS * 1000L)
     val idsToTrack: Seq[Long] = if (handlesToTrack.size > 0) {
       println("getting ids to track...")
       val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)
