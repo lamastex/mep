@@ -81,14 +81,15 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
     val filename = "moveTest"
 
     val sourceDir = rootPath
-    val destDir = rootPath + "movetestDir/"
-    val sourceFile = rootPath + "moveTest"
+    val destDir = rootPath + "moveTestDir/"
+    val sourceFile = rootPath + filename
+    val destFile = destDir + filename
 
-    IOHelper.moveFile(sourceFile, destDir + filename)
+    IOHelper.moveFile(sourceFile, destFile)
 
     assert(testDir.listFiles.map(_.getName).contains("moveTest"))
 
-    IOHelper.moveFile(destDir + filename, sourceDir + filename)
+    IOHelper.moveFile(destFile, sourceFile)
 
     testDir.delete
   }
@@ -123,7 +124,7 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     }
 
     val pool = Executors.newScheduledThreadPool(2)
-    val stopStreamInS = 70L
+    val stopStreamInS = 40L
     val writeDelayInS = 20L // Delay before starting write job
     val writeRateInS = 20L  // Delay between write jobs 
 
