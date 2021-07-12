@@ -13,6 +13,7 @@ import scala.collection.JavaConverters._
 import twitter4j.FilterQuery
 import os.read
 import java.io.FileNotFoundException
+import java.nio.file.{Files, Path, StandardCopyOption}
 
 /*  A class that reads a Twitter stream into a buffer
  *  buffer: The buffer to save tweets into.
@@ -143,6 +144,20 @@ object IOHelper {
     writer.close
     printf("%d bytes written to %s\n", bytesWritten, file)
     return buffer
+  }
+
+  /*  Moves a file
+   *  file: path of file to be moved
+   *  destination: destination to move file to,
+   *               must include filename.
+   */
+  def moveFile(
+    file: String,
+    destination: String
+  ): Unit = {
+    val filePath = new File(file).toPath
+    val destPath = new File(destination).toPath
+    Files.move(filePath, destPath, StandardCopyOption.REPLACE_EXISTING)
   }
 }
 

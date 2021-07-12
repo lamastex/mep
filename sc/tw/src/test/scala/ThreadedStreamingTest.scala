@@ -55,10 +55,10 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
 
     val testTweetsIter = testTweetsSeq.toIterator
 
-    val testDir = new File(rootPath + "test")
+    val testDir = new File(rootPath + "writeTest")
     testDir.mkdir()
 
-    val testFile = rootPath + "test/test.jsonl"
+    val testFile = rootPath + "writeTest/test.jsonl"
     IOHelper.writeBufferToFile(
       testFile, 
       testTweetsIter, 
@@ -72,6 +72,25 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
     testDir.delete
     source.close
     compareSource.close
+  }
+
+  test("File moving test") {
+    val testDir = new File(rootPath + "moveTestDir")
+    testDir.mkdir()
+
+    val filename = "moveTest"
+
+    val sourceDir = rootPath
+    val destDir = rootPath + "movetestDir/"
+    val sourceFile = rootPath + "moveTest"
+
+    IOHelper.moveFile(sourceFile, destDir + filename)
+
+    assert(testDir.listFiles.map(_.getName).contains("moveTest"))
+
+    IOHelper.moveFile(destDir + filename, sourceDir + filename)
+
+    testDir.delete
   }
 }
 
