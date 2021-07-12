@@ -67,7 +67,7 @@ class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Lo
       twitterStream.cleanUp
       twitterStream.shutdown
       var remTweets = 0
-      val filename = "tmp/remainingTweets" + java.time.Instant.now.getEpochSecond.toString + ".csv"
+      val filename = "tmp/remainingTweets" + java.time.Instant.now.getEpochSecond.toString + ".jsonl"
       val filewriter = new FileWriter(new File(filename))
       while (buffer.hasNext) {
         filewriter.write(buffer.next() + "\n")
@@ -75,7 +75,7 @@ class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Lo
       }
       filewriter.close()
       printf("%d tweets written to %s\n", remTweets, filename)
-      printf("%d tweets remaining in buffer", buffer.size)
+      printf("%d tweets remaining in buffer\n", buffer.size)
     }
   }
   
@@ -151,11 +151,11 @@ object IOHelper {
  *            and recording tweets into its buffer
  *  filename: The path and root file name of the files into which tweets are written.
  *            Files are named by (filename + timestamp + ".jsonl") where timestamp is
- *            Unix Epoch (seconds since 00:00:00 1/1/1970) * 
+ *            Unix Epoch (seconds since 00:00:00 1/1/1970) when the file was created. 
  *  maxFileSizeBytes: The maximum file size in Bytes. It is very unlikely that any file 
- *                    is larger than this, but it is not completely guaranteed.
+ *                    is larger than this, but it is not completely guaranteed. Default 10 MB.
  */ 
-class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeBytes: Long = 3 * 1024 * 1024L) extends Runnable {
+class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeBytes: Long = 10 * 1024 * 1024L) extends Runnable {
   override def run(): Unit = {
     val filePath = {
       val pathArray = filename.split('/').dropRight(1)
@@ -186,7 +186,8 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
       append
     )
 
-    // When the last file is full, write the rest into new files
+    // When the last file is full, write the rest into new files.
+    // If everything is already written, the buffer will be empty.
     while(buffer.hasNext) {
       IOHelper.writeBufferToFile(
         filename + java.time.Instant.now.getEpochSecond.toString + ".jsonl",
@@ -198,15 +199,28 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
 }
 
 object ThreadedTwitterStreamWithWrite {
+  /*  Sets up a Twitter stream and writes tweets to files on disk.
+   *  Parameters in order:
+   *  0: Numeric - Number of ms to stream for, indefinitely if not positive. Default 60000L (60 s).
+   *  1: Numeric - Number of ms between writes, default 20000 (20 s).
+   *  2: Numeric - Maximum file size in Bytes, default 10*1024^2 (10 MB)
+   *  3: String  - Path and root file name for written files, default "tmp/tweets"
+   *               (resulting in files like "tmp/<Timestamp>.jsonl").
+   *  4: String  - File with Twitter handles to track. Should be a text
+   *               file with one handle per line and without "@", 
+   *               default "trackedHandles.txt". If no such file exists,
+   *               no filtering will be performed on the stream.
+   */
   def main(args: Array[String]): Unit = {
-    // Clean tmp directory
-    for {
-      files <- Option(new File("tmp/").listFiles)
-      file <- files if file.getName.endsWith(".jsonl")
-    } file.delete()
+
+    // Parsing arguments
+    val stopStreamInMs: Long = T(() => args(0).toLong).getOrElse(60000L)
+    val writeRateInMs: Long = T(() => args(1).toLong).getOrElse(20000L)
+    val maxFileSizeBytes: Long = T(() => args(2).toLong).getOrElse(10L*1024L*1024L)
+    val outputFilenames: String = T(() => args(3)).getOrElse("tmp/tweets")
+    val handleFilename: String = T(() => args(4)).getOrElse("trackedHandles.txt")
 
     // get Handles to track
-    val handleFilename = "src/test/resources/trackedHandles.txt"
     var handlesToTrack: Seq[String] = Seq.empty
 
     try {
@@ -221,17 +235,15 @@ object ThreadedTwitterStreamWithWrite {
     }
 
     val pool = Executors.newScheduledThreadPool(2)
-    val stopStreamInS = 70L
-    val writeDelayInS = 20L // Delay before starting write job
-    val writeRateInS = 20L  // Delay between write jobs 
+    val writeDelayInMs = writeRateInMs // Delay before starting write job
 
     var buffer: Iterator[String] = Iterator.empty
 
-    val streamer = new BufferedTwitterStream(buffer, stopStreamInS * 1000L)
+    val streamer = new BufferedTwitterStream(buffer, stopStreamInMs)
     val idsToTrack: Seq[Long] = if (handlesToTrack.size > 0) {
       println("getting ids to track...")
       val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)
-      printf("%d ids tracked\n", idsToTrack.size)
+      printf("%d valid ids tracked\n", idsToTrack.size)
       idsToTrack
     } else Seq.empty
     
@@ -241,42 +253,14 @@ object ThreadedTwitterStreamWithWrite {
     pool.submit(streamer)
 
     // Create and start write jobs
-    val writeJob = new AsyncWrite(streamer, "tmp/async")
-    pool.scheduleAtFixedRate(writeJob, writeDelayInS, writeRateInS, TimeUnit.SECONDS)
+    val writeJob = new AsyncWrite(streamer, outputFilenames, maxFileSizeBytes)
+    pool.scheduleAtFixedRate(writeJob, writeDelayInMs, writeRateInMs, TimeUnit.MILLISECONDS)
 
     // Wait until stream has finished
-    Thread.sleep(stopStreamInS * 1000)
-
-    pool.shutdown()
-    pool.awaitTermination(stopStreamInS*2, TimeUnit.SECONDS)
-    val tweetsWrittenAsync = Option(new File("tmp/").listFiles().toSeq.filter(_.getName().contains("async")))
-      .getOrElse(Seq.empty)
-      .map(file => io.Source.fromFile(file).getLines.size)
-      .sum
-    printf("Tweets written Async: %d\n", tweetsWrittenAsync)
+    if (stopStreamInMs > 0) {
+      Thread.sleep(stopStreamInMs)
+      pool.shutdown()
+      pool.awaitTermination(stopStreamInMs*2, TimeUnit.MILLISECONDS)
+    }
   }
 }
-  
-// Obsolete
-/* object RunThreadedStreamWithWrite {
-  def main(args : Array[String]): Unit = {
-    val pool = Executors.newFixedThreadPool(2)
-    
-    var buffer: Iterator[String] = Iterator.empty
-    
-    val streamer = new BufferedTwitterStream(buffer)
-    
-    pool.submit(streamer)
-    
-    Thread.sleep(20000L)
-    //pool.submit(new AsyncWrite(streamer.getBuffer, "tmp/test1.csv"))
-    pool.submit(new AsyncWrite(streamer, "tmp/test1.csv"))
-    
-    Thread.sleep(20000L)
-    //pool.submit(new AsyncWrite(streamer.getBuffer, "tmp/test2.csv"))
-    pool.submit(new AsyncWrite(streamer, "tmp/test1.csv"))
-    
-    pool.shutdown()
-    pool.awaitTermination(20, TimeUnit.SECONDS)
-  }
-} */
