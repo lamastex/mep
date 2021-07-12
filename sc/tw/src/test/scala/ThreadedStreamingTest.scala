@@ -26,7 +26,7 @@ class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], stopStreamInMs
       twitterStream.cleanUp
       twitterStream.shutdown
       var remTweets = 0
-      val filename = "tmp/remainingTweets.csv"
+      val filename = "tmp/remainingTweets.jsonl"
       val filewriter = new FileWriter(new File(filename))
       while (buffer.hasNext) {
         filewriter.write(buffer.next() + "\n")
@@ -100,7 +100,11 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     // Clean tmp directory
     for {
       files <- Option(new File("tmp/").listFiles)
-      file <- files if file.getName.endsWith(".csv")
+      file <- files if file.getName.endsWith(".jsonl")
+    } file.delete()
+    for {
+      files <- Option(new File("tmp/full/").listFiles)
+      file <- files if file.getName.endsWith(".jsonl")
     } file.delete()
 
     // get Handles to track
@@ -138,8 +142,10 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     // Start the Twitter stream
     pool.submit(streamer)
 
+    val maxFileSizeBytes = 3*1024*1024L
+
     // Create and start write jobs
-    val writeJob = new AsyncWrite(streamer, "tmp/async")
+    val writeJob = new AsyncWrite(streamer, "tmp/tweetTest", maxFileSizeBytes, "tmp/full/")
     pool.scheduleAtFixedRate(writeJob, writeDelayInS, writeRateInS, TimeUnit.SECONDS)
 
     // Wait until stream has finished
@@ -147,10 +153,14 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
 
     pool.shutdown()
     pool.awaitTermination(stopStreamInS*2, TimeUnit.SECONDS)
-    val tweetsWrittenAsync = Option(new File("tmp/").listFiles().toSeq.filter(_.getName().contains("async")))
+    val tweetsInFullFiles = Option(new File("tmp/full/").listFiles().toSeq.filter(_.getName().contains("tweetTest")))
       .getOrElse(Seq.empty)
       .map(file => io.Source.fromFile(file).getLines.size)
       .sum
-    printf("Tweets written Async: %d\n", tweetsWrittenAsync)
+    val tweetsInNonFullFiles = Option(new File("tmp/").listFiles().toSeq.filter(_.getName().contains("tweetTest")))
+      .getOrElse(Seq.empty)
+      .map(file => io.Source.fromFile(file).getLines.size)
+      .sum
+    printf("Tweets written Async: %d\n", tweetsInFullFiles + tweetsInNonFullFiles)
   }
 }

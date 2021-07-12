@@ -116,8 +116,8 @@ object IOHelper {
   // Returns the file with the largest name w.r.t. string comparison
   def getLastFile(path: String): Option[File] = {
     val files = Option(new File(path).listFiles)
-    if (files.isDefined && files.get.nonEmpty) {
-      Some(files.get.sortBy(file => file.getName).last)
+    if (files.isDefined && files.get.filter(file => file.isFile).nonEmpty) {
+      Some(files.get.filter(file => file.isFile).sortBy(file => file.getName).last)
     } else None
   }
 
@@ -166,8 +166,14 @@ object IOHelper {
   * Unix Epoch (seconds since 00:00:00 1/1/1970) when the file was created. 
   * @param maxFileSizeBytes The maximum file size in Bytes. It is very unlikely that any file 
   * is larger than this, but it is not completely guaranteed. Default 10 MB.
+  * @param storageDirectory If given a non-empty String, full files are moved to this path. Default empty string.
   */  
-class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeBytes: Long = 10 * 1024 * 1024L) extends Runnable {
+class AsyncWrite(
+  streamer: BufferedTwitterStream, 
+  filename: String, 
+  maxFileSizeBytes: Long = 10 * 1024 * 1024L,
+  storageDirectory: String = ""
+) extends Runnable {
   override def run(): Unit = {
     val filePath = {
       val pathArray = filename.split('/').dropRight(1)
@@ -201,8 +207,13 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
     // When the last file is full, write the rest into new files.
     // If everything is already written, the buffer will be empty.
     while(buffer.hasNext) {
+      // If the program gets here, the last file is full and can be moved.
+      if (storageDirectory.nonEmpty)
+        IOHelper.moveFile(filenameWithTime, storageDirectory + filenameWithTime.split("/").last)
+
+      filenameWithTime = filename + java.time.Instant.now.getEpochSecond.toString + ".jsonl"
       IOHelper.writeBufferToFile(
-        filename + java.time.Instant.now.getEpochSecond.toString + ".jsonl",
+        filenameWithTime,
         buffer,
         maxFileSizeBytes
       )
