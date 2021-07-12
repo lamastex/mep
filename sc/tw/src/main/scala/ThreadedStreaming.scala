@@ -15,17 +15,12 @@ import os.read
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path, StandardCopyOption}
 
-/*  A class that reads a Twitter stream into a buffer
- *  buffer: The buffer to save tweets into.
- *  stopStreamInMs: If a positive value is given, the stream
- *                  will stop after this number of ms, otherwise
- *                  it will stream indefinitely. Note that there
- *                  currently are no checks in place to make sure
- *                  that the buffer is within memory limits.
- *                  If the stream is to continue indefinitely,
- *                  the buffer MUST be emptied in some other way,
- *                  for example by writing it to disk.
- */
+/**
+  * A class that reads a Twitter stream into a buffer
+  *
+  * @param buffer The buffer to save tweets into.
+  * @param stopStreamInMs If a positive value is given, the stream will stop after this number of ms, otherwise it will stream indefinitely. Note that there currently are no checks in place to make sure that the buffer is within memory limits. If the stream is to continue indefinitely, the buffer MUST be emptied in some other way, for example by writing it to disk.
+  */  
 class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Long = 60000L) extends TwitterBasic with Runnable {
   
   var idsToTrack: Seq[Long] = Seq.empty
@@ -146,11 +141,12 @@ object IOHelper {
     return buffer
   }
 
-  /*  Moves a file
-   *  file: path of file to be moved
-   *  destination: destination to move file to,
-   *               must include filename.
-   */
+  /**
+    * Moves a file
+    *
+    * @param file path of file to be moved
+    * @param destination destination to move file to, must include filename.
+    */  
   def moveFile(
     file: String,
     destination: String
@@ -161,15 +157,16 @@ object IOHelper {
   }
 }
 
-/*  A class to write the buffered stream asynchronously.
- *  streamer: The object responsible for running the twitter stream
- *            and recording tweets into its buffer
- *  filename: The path and root file name of the files into which tweets are written.
- *            Files are named by (filename + timestamp + ".jsonl") where timestamp is
- *            Unix Epoch (seconds since 00:00:00 1/1/1970) when the file was created. 
- *  maxFileSizeBytes: The maximum file size in Bytes. It is very unlikely that any file 
- *                    is larger than this, but it is not completely guaranteed. Default 10 MB.
- */ 
+/**
+  * A class to write the buffered stream asynchronously.
+  *
+  * @param streamer The object responsible for running the twitter stream and recording tweets into its buffer.
+  * @param filename The path and root file name of the files into which tweets are written.
+  * Files are named by (filename + timestamp + ".jsonl") where timestamp is
+  * Unix Epoch (seconds since 00:00:00 1/1/1970) when the file was created. 
+  * @param maxFileSizeBytes The maximum file size in Bytes. It is very unlikely that any file 
+  * is larger than this, but it is not completely guaranteed. Default 10 MB.
+  */  
 class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeBytes: Long = 10 * 1024 * 1024L) extends Runnable {
   override def run(): Unit = {
     val filePath = {
@@ -214,18 +211,25 @@ class AsyncWrite(streamer: BufferedTwitterStream, filename: String, maxFileSizeB
 }
 
 object ThreadedTwitterStreamWithWrite {
-  /*  Sets up a Twitter stream and writes tweets to files on disk.
-   *  Parameters in order:
-   *  0: Numeric - Number of ms to stream for, indefinitely if not positive. Default 60000L (60 s).
-   *  1: Numeric - Number of ms between writes, default 20000 (20 s).
-   *  2: Numeric - Maximum file size in Bytes, default 10*1024^2 (10 MB)
-   *  3: String  - Path and root file name for written files, default "tmp/tweets"
-   *               (resulting in files like "tmp/<Timestamp>.jsonl").
-   *  4: String  - File with Twitter handles to track. Should be a text
-   *               file with one handle per line and without "@", 
-   *               default "trackedHandles.txt". If no such file exists,
-   *               no filtering will be performed on the stream.
-   */
+  /**
+    * Sets up a Twitter stream and writes tweets to files on disk.
+    *
+    * Parameters in order:
+    *   
+    * 0: Numeric - Number of ms to stream for, indefinitely if not positive. Default 60000L (60 s). 
+    *   
+    * 1: Numeric - Number of ms between writes, default 20000 (20 s).
+    *   
+    * 2: Numeric - Maximum file size in Bytes, default 10*1024^2 (10 MB)
+    *   
+    * 3: String  - Path and root file name for written files, default "tmp/tweets"
+    *               (resulting in files like "tmp/<Timestamp>.jsonl").
+    *   
+    * 4: String  - File with Twitter handles to track. Should be a text
+    *               file with one handle per line and without "@", 
+    *               default "trackedHandles.txt". If no such file exists,
+    *               no filtering will be performed on the stream.
+    */
   def main(args: Array[String]): Unit = {
 
     // Parsing arguments
