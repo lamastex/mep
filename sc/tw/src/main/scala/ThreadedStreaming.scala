@@ -166,7 +166,8 @@ object IOHelper {
   * Unix Epoch (seconds since 00:00:00 1/1/1970) when the file was created. 
   * @param maxFileSizeBytes The maximum file size in Bytes. It is very unlikely that any file 
   * is larger than this, but it is not completely guaranteed. Default 10 MB.
-  * @param storageDirectory If given a non-empty String, full files are moved to this path. Default empty string.
+  * @param storageDirectory If given a non-empty String, full files are moved to this path. 
+  * Directory name must contain trailing "/". Default empty string.
   */  
 class AsyncWrite(
   streamer: BufferedTwitterStream, 
@@ -240,6 +241,9 @@ object ThreadedTwitterStreamWithWrite {
     *               file with one handle per line and without "@", 
     *               default "trackedHandles.txt". If no such file exists,
     *               no filtering will be performed on the stream.
+    * 
+    * 5: String  - Directory to put full files into. Files are not moved if this is an empty string. 
+    *               Default empty string.
     */
   def main(args: Array[String]): Unit = {
 
@@ -249,6 +253,7 @@ object ThreadedTwitterStreamWithWrite {
     val maxFileSizeBytes: Long = T(() => args(2).toLong).getOrElse(10L*1024L*1024L)
     val outputFilenames: String = T(() => args(3)).getOrElse("tmp/tweets")
     val handleFilename: String = T(() => args(4)).getOrElse("trackedHandles.txt")
+    val fullFilesDirectory: String = T(() => args(5)).getOrElse("")
 
     // get Handles to track
     var handlesToTrack: Seq[String] = Seq.empty
@@ -283,7 +288,7 @@ object ThreadedTwitterStreamWithWrite {
     pool.submit(streamer)
 
     // Create and start write jobs
-    val writeJob = new AsyncWrite(streamer, outputFilenames, maxFileSizeBytes)
+    val writeJob = new AsyncWrite(streamer, outputFilenames, maxFileSizeBytes, fullFilesDirectory)
     pool.scheduleAtFixedRate(writeJob, writeDelayInMs, writeRateInMs, TimeUnit.MILLISECONDS)
 
     // Wait until stream has finished
