@@ -107,18 +107,27 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
 class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
   test("Threaded Streaming") {
 
+    // Load config
+    val streamConfig = IOHelper.getConfig("src/test/resources/streamConfig.conf")
+
+    val maxFileSizeBytes = streamConfig.getLong("max-file-size")
+    val outputFilenames = streamConfig.getString("output-filenames")
+    val fullFilesDirectory = streamConfig.getString("completed-file-directory")
+    val writeDir = outputFilenames.split("/").dropRight(1).mkString("/") + "/"
+
     // Clean tmp directory
     for {
-      files <- Option(new File("tmp/").listFiles)
+      files <- Option(new File(writeDir).listFiles)
       file <- files if file.getName.endsWith(".jsonl")
     } file.delete()
     for {
-      files <- Option(new File("tmp/full/").listFiles)
+      files <- Option(new File(fullFilesDirectory).listFiles)
       file <- files if file.getName.endsWith(".jsonl")
     } file.delete()
-
+    
     // get Handles to track
-    val handleFilename = "src/test/resources/trackedHandles.txt"
+    // val handleFilename = "src/test/resources/trackedHandles.txt"
+    val handleFilename = streamConfig.getString("handles-to-track")
     var handlesToTrack: Seq[String] = Seq.empty
 
     try {
@@ -133,13 +142,13 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     }
 
     val pool = Executors.newScheduledThreadPool(2)
-    val stopStreamInS = 40L
-    val writeDelayInS = 20L // Delay before starting write job
-    val writeRateInS = 20L  // Delay between write jobs 
+    val stopStreamInMs = streamConfig.getLong("stream-duration")
+    val writeRateInMs = streamConfig.getLong("write-rate") // Delay between write jobs 
+    val writeDelayInMs = writeRateInMs // Delay before starting write job
 
     var buffer: Iterator[String] = Iterator.empty
 
-    val streamer = new BufferedTwitterStreamTest(buffer, stopStreamInS * 1000L)
+    val streamer = new BufferedTwitterStreamTest(buffer, stopStreamInMs)
     val idsToTrack: Seq[Long] = if (handlesToTrack.size > 0) {
       println("getting ids to track...")
       val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)
@@ -152,22 +161,20 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     // Start the Twitter stream
     pool.submit(streamer)
 
-    val maxFileSizeBytes = 3*1024*1024L
-
     // Create and start write jobs
-    val writeJob = new AsyncWrite(streamer, "tmp/tweetTest", maxFileSizeBytes, "tmp/full/")
-    pool.scheduleAtFixedRate(writeJob, writeDelayInS, writeRateInS, TimeUnit.SECONDS)
+    val writeJob = new AsyncWrite(streamer, outputFilenames, maxFileSizeBytes, fullFilesDirectory)
+    pool.scheduleAtFixedRate(writeJob, writeDelayInMs, writeRateInMs, TimeUnit.MILLISECONDS)
 
     // Wait until stream has finished
-    Thread.sleep(stopStreamInS * 1000)
+    Thread.sleep(stopStreamInMs)
 
     pool.shutdown()
-    pool.awaitTermination(stopStreamInS*2, TimeUnit.SECONDS)
-    val tweetsInFullFiles = Option(new File("tmp/full/").listFiles().toSeq.filter(_.getName().contains("tweetTest")))
+    pool.awaitTermination(stopStreamInMs*2, TimeUnit.MILLISECONDS)
+    val tweetsInFullFiles = Option(new File(fullFilesDirectory).listFiles().toSeq.filter(_.getName().contains("tweetTest")))
       .getOrElse(Seq.empty)
       .map(file => io.Source.fromFile(file).getLines.size)
       .sum
-    val tweetsInNonFullFiles = Option(new File("tmp/").listFiles().toSeq.filter(_.getName().contains("tweetTest")))
+    val tweetsInNonFullFiles = Option(new File(writeDir).listFiles().toSeq.filter(_.getName().contains("tweetTest")))
       .getOrElse(Seq.empty)
       .map(file => io.Source.fromFile(file).getLines.size)
       .sum

@@ -231,34 +231,22 @@ object ThreadedTwitterStreamWithWrite {
   /**
     * Sets up a Twitter stream and writes tweets to files on disk.
     *
-    * Parameters in order:
-    *   
-    * 0: Numeric - Number of ms to stream for, indefinitely if not positive. Default 60000L (60 s). 
-    *   
-    * 1: Numeric - Number of ms between writes, default 20000 (20 s).
-    *   
-    * 2: Numeric - Maximum file size in Bytes, default 10*1024^2 (10 MB)
-    *   
-    * 3: String  - Path and root file name for written files, default "tmp/tweets"
-    *               (resulting in files like "tmp/<Timestamp>.jsonl").
-    *   
-    * 4: String  - File with Twitter handles to track. Should be a text
-    *               file with one handle per line and without "@", 
-    *               default "trackedHandles.txt". If no such file exists,
-    *               no filtering will be performed on the stream.
-    * 
-    * 5: String  - Directory to put full files into. Files are not moved if this is an empty string. 
-    *               Default empty string.
+    * @param args Full path to .conf file with configuration for the stream. 
+    * Default streamConfig.conf
     */
   def main(args: Array[String]): Unit = {
 
     // Parsing arguments
-    val stopStreamInMs: Long = T(() => args(0).toLong).getOrElse(60000L)
-    val writeRateInMs: Long = T(() => args(1).toLong).getOrElse(20000L)
-    val maxFileSizeBytes: Long = T(() => args(2).toLong).getOrElse(10L*1024L*1024L)
-    val outputFilenames: String = T(() => args(3)).getOrElse("tmp/tweets")
-    val handleFilename: String = T(() => args(4)).getOrElse("trackedHandles.txt")
-    val fullFilesDirectory: String = T(() => args(5)).getOrElse("")
+
+    val configFile: String = T(() => args(0)).getOrElse("streamConfig.conf")
+    val streamConfig = IOHelper.getConfig(configFile)
+
+    val stopStreamInMs: Long = streamConfig.getLong("stream-duration")
+    val writeRateInMs: Long = streamConfig.getLong("write-rate")
+    val maxFileSizeBytes: Long = streamConfig.getLong("max-file-size")
+    val outputFilenames: String = streamConfig.getString("output-filenames")
+    val handleFilename: String = streamConfig.getString("handles-to-track")
+    val fullFilesDirectory: String = streamConfig.getString("completed-file-directory")
 
     // get Handles to track
     var handlesToTrack: Seq[String] = Seq.empty
