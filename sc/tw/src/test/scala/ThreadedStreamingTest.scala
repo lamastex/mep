@@ -41,7 +41,7 @@ class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], stopStreamInMs
 }
 
 class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
-  val rootPath = "src/test/resources/"
+  val rootPath = "src/test/resources/iohelper/"
 
   test("Get last file") {
     val lastFile = IOHelper.getLastFile(rootPath)
