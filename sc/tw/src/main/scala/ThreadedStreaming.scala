@@ -14,6 +14,7 @@ import twitter4j.FilterQuery
 import os.read
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path, StandardCopyOption}
+import com.typesafe.config._
 
 /**
   * A class that reads a Twitter stream into a buffer
@@ -154,6 +155,10 @@ object IOHelper {
     val filePath = new File(file).toPath
     val destPath = new File(destination).toPath
     Files.move(filePath, destPath, StandardCopyOption.REPLACE_EXISTING)
+  }
+
+  def getConfig(configFile: String): Config = {
+    ConfigFactory.parseFile(new File(configFile))
   }
 }
 

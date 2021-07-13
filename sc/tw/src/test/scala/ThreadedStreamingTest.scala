@@ -93,6 +93,15 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
 
     testDir.delete
   }
+
+  test("Configuration loader test") {
+    val configFile = rootPath + "testConfig.conf"
+
+    val config = IOHelper.getConfig(configFile)
+
+    assert(config.getString("string") == "test")
+    assert(config.getLong("long") == 1L)
+  }
 }
 
 class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
