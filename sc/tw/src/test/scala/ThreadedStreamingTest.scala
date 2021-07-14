@@ -95,12 +95,23 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
   }
 
   test("Configuration loader test") {
-    val configFile = rootPath + "testConfig.conf"
+    val configTestFile = rootPath + "testConfig.conf"
 
-    val config = IOHelper.getConfig(configFile)
+    val configTest = IOHelper.getConfig(configTestFile)
 
-    assert(config.getString("string") == "test")
-    assert(config.getLong("long") == 1L)
+    assert(configTest.getString("string") == "test")
+    assert(configTest.getLong("long") == 1L)
+
+    val completeConfigTestFile = rootPath.split("/").dropRight(1).mkString("/") +
+                                 "/streamConfig.conf"
+    val completeConfigTest = IOHelper.getConfig(completeConfigTestFile)
+
+    val streamConfig = IOHelper.getStreamConfig(completeConfigTest)
+    assert(streamConfig.streamDuration == 21000L)
+
+    val writeConfig = IOHelper.getWriteConfig(completeConfigTest)
+    assert(writeConfig.writeRate == 10000L)
+    assert(writeConfig.fullFilesDirectory == "tmp/full/")
   }
 }
 
@@ -108,11 +119,19 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
   test("Threaded Streaming") {
 
     // Load config
-    val streamConfig = IOHelper.getConfig("src/test/resources/streamConfig.conf")
+    val mainConfig = IOHelper.getConfig("src/test/resources/streamConfig.conf")
+    val streamConfig = IOHelper.getStreamConfig(mainConfig)
+    val writeConfig = IOHelper.getWriteConfig(mainConfig)
 
+    /* 
     val maxFileSizeBytes = streamConfig.getLong("max-file-size")
     val outputFilenames = streamConfig.getString("output-filenames")
     val fullFilesDirectory = streamConfig.getString("completed-file-directory")
+    */
+
+    val maxFileSizeBytes = writeConfig.maxFileSize
+    val outputFilenames = writeConfig.outputFilenames
+    val fullFilesDirectory = writeConfig.fullFilesDirectory
     val writeDir = outputFilenames.split("/").dropRight(1).mkString("/") + "/"
 
     // Clean tmp directory
@@ -126,8 +145,8 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     } file.delete()
     
     // get Handles to track
-    // val handleFilename = "src/test/resources/trackedHandles.txt"
-    val handleFilename = streamConfig.getString("handles-to-track")
+    //val handleFilename = streamConfig.getString("handles-to-track")
+    val handleFilename = streamConfig.handlesFilePath
     var handlesToTrack: Seq[String] = Seq.empty
 
     try {
@@ -142,8 +161,10 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     }
 
     val pool = Executors.newScheduledThreadPool(2)
-    val stopStreamInMs = streamConfig.getLong("stream-duration")
-    val writeRateInMs = streamConfig.getLong("write-rate") // Delay between write jobs 
+    // val stopStreamInMs = streamConfig.getLong("stream-duration")
+    // val writeRateInMs = streamConfig.getLong("write-rate") // Delay between write jobs 
+    val stopStreamInMs = streamConfig.streamDuration
+    val writeRateInMs = writeConfig.writeRate
     val writeDelayInMs = writeRateInMs // Delay before starting write job
 
     var buffer: Iterator[String] = Iterator.empty

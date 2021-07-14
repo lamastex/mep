@@ -15,6 +15,19 @@ import os.read
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path, StandardCopyOption}
 import com.typesafe.config._
+import os.write
+
+case class StreamConfig (
+  handlesFilePath: String,
+  streamDuration: Long
+)
+
+case class WriteConfig (
+  outputFilenames: String,
+  fullFilesDirectory: String,
+  maxFileSize: Long,
+  writeRate: Long
+)
 
 /**
   * A class that reads a Twitter stream into a buffer
@@ -160,6 +173,24 @@ object IOHelper {
   def getConfig(configFile: String): Config = {
     ConfigFactory.parseFile(new File(configFile))
   }
+
+  def getStreamConfig(config: Config): StreamConfig = {
+    val streamConfig = config.getConfig("streamConfig")
+    StreamConfig(
+      handlesFilePath = streamConfig.getString("handles-to-track"),
+      streamDuration = streamConfig.getLong("stream-duration")
+    )
+  }
+
+  def getWriteConfig(config: Config): WriteConfig = {
+    val writeConfig = config.getConfig("writeConfig")
+    WriteConfig(
+      outputFilenames = writeConfig.getString("output-filenames"),
+      fullFilesDirectory = writeConfig.getString("completed-file-directory"),
+      maxFileSize = writeConfig.getLong("max-file-size"),
+      writeRate = writeConfig.getLong("write-rate")
+    )
+  }
 }
 
 /**
@@ -239,14 +270,25 @@ object ThreadedTwitterStreamWithWrite {
     // Parsing arguments
 
     val configFile: String = T(() => args(0)).getOrElse("streamConfig.conf")
-    val streamConfig = IOHelper.getConfig(configFile)
+    val mainConfig = IOHelper.getConfig(configFile)
+    val streamConfig = IOHelper.getStreamConfig(mainConfig)
+    val writeConfig = IOHelper.getWriteConfig(mainConfig)
 
+    val stopStreamInMs: Long = streamConfig.streamDuration
+    val handleFilename: String = streamConfig.handlesFilePath
+    val writeRateInMs: Long = writeConfig.writeRate
+    val maxFileSizeBytes: Long = writeConfig.maxFileSize
+    val outputFilenames: String = writeConfig.outputFilenames
+    val fullFilesDirectory: String = writeConfig.fullFilesDirectory
+
+    /*
     val stopStreamInMs: Long = streamConfig.getLong("stream-duration")
     val writeRateInMs: Long = streamConfig.getLong("write-rate")
     val maxFileSizeBytes: Long = streamConfig.getLong("max-file-size")
     val outputFilenames: String = streamConfig.getString("output-filenames")
     val handleFilename: String = streamConfig.getString("handles-to-track")
     val fullFilesDirectory: String = streamConfig.getString("completed-file-directory")
+    */
 
     // get Handles to track
     var handlesToTrack: Seq[String] = Seq.empty
@@ -283,7 +325,7 @@ object ThreadedTwitterStreamWithWrite {
     // Create and start write jobs
     val writeJob = new AsyncWrite(streamer, outputFilenames, maxFileSizeBytes, fullFilesDirectory)
     pool.scheduleAtFixedRate(writeJob, writeDelayInMs, writeRateInMs, TimeUnit.MILLISECONDS)
-
+    
     // Wait until stream has finished
     if (stopStreamInMs > 0) {
       Thread.sleep(stopStreamInMs)
