@@ -11,11 +11,9 @@ import twitter4j.Status
 import twitter4j.StallWarning
 import scala.collection.JavaConverters._
 import twitter4j.FilterQuery
-import os.read
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path, StandardCopyOption}
 import com.typesafe.config._
-import os.write
 
 case class StreamConfig (
   handlesFilePath: String,
@@ -29,6 +27,12 @@ case class WriteConfig (
   writeRate: Long
 )
 
+case class TweetSchema (
+  id: Long, 
+  json: String, 
+  time: Long
+)
+
 /**
   * A class that reads a Twitter stream into a buffer
   *
@@ -39,18 +43,18 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
   
   var streamDuration: Long = streamConfig.streamDuration
   var idsToTrack: Seq[Long] = Seq.empty
-  var buffer: Iterator[String] = Iterator.empty
+  var buffer: Iterator[TweetSchema] = Iterator.empty
 
   def setIdsToTrack(ids: Seq[Long]): Unit = {
     idsToTrack = ids
   }
   
   def handleStatus(status: Status): Unit = {
-    buffer = buffer ++ Iterator(statusToGson(status))
+    val tweet = TweetSchema(status.getId, statusToGson(status), status.getCreatedAt.getTime)
+    buffer = buffer ++ Iterator(tweet)
   }
   
   override def simpleStatusListener = new StatusListener() {
-    //def onStatus(status: Status): Unit = { println(status.getText) }
     def onStatus(status: Status): Unit = { 
       handleStatus(status) 
     }
@@ -91,7 +95,7 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     }
   }
   
-  def getBuffer(): Iterator[String] = buffer
+  def getBuffer(): Iterator[TweetSchema] = buffer
   
   def lookupUserSNs(retweeterIds:Seq[String]) = {
     val grouped = retweeterIds.grouped(100).toList 
@@ -107,6 +111,8 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     .toSet
     .toSeq
     .filter(_.isValidLong)
+
+  
   
   override def run(): Unit = {
     val twitterStream = getTwitterStreamInstance
@@ -139,16 +145,18 @@ object IOHelper {
 
   def writeBufferToFile(
     file: String, 
-    buffer: Iterator[String], 
+    buffer: Iterator[TweetSchema], 
     allowedBytes: Long, // max Bytes written to the file
     append: Boolean = false
-  ): Iterator[String] = {
+  ): Iterator[TweetSchema] = {
     println("Writing to " + file)
     val writer = new FileWriter(new File(file), append)
     var bytesWritten = 0L
+    var nextTweet = TweetSchema(0L,"",0L)
     var nextLine = ""
     while(buffer.hasNext && bytesWritten + nextLine.getBytes.length < allowedBytes - TWEETSIZE) {
-      nextLine = buffer.next + "\n"
+      nextTweet = buffer.next
+      nextLine = s"""{"tweetId":${nextTweet.id},"json":${nextTweet.json},"time":${nextTweet.time}}\n"""
       writer.write(nextLine)
       bytesWritten += nextLine.getBytes.length
     }

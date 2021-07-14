@@ -15,7 +15,8 @@ class BufferedTwitterStreamTest(streamConfig: StreamConfig) extends BufferedTwit
   var tweetsRead = 0
 
   override def handleStatus(status: Status): Unit = {
-    buffer = buffer ++ Iterator(statusToGson(status))
+    val tweet = TweetSchema(status.getId, statusToGson(status), status.getCreatedAt.getTime)
+    buffer = buffer ++ Iterator(tweet)
     tweetsRead = tweetsRead + 1
   }
 
@@ -50,8 +51,19 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
   }
 
   test("Write buffer") {
+    def lineToTweet(line: String) = {
+      val arr = line.split(":")
+      val id = arr(1).split(",").head.toLong
+      val json = arr.drop(2).mkString(":").split(",").dropRight(1).mkString(",")
+      val time = arr.last.split("}").head.toLong
+      TweetSchema(id, json, time)
+    }
+
     val source = Source.fromFile(rootPath + "testTweets.jsonl")
-    val testTweetsSeq = source.getLines.toSeq
+    val testTweetsSeq: Seq[TweetSchema] = source
+      .getLines
+      .toSeq
+      .map(lineToTweet)
 
     val testTweetsIter = testTweetsSeq.toIterator
 
@@ -66,7 +78,7 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
     )
 
     val compareSource = Source.fromFile(testFile)
-    assert(compareSource.getLines.toSeq == testTweetsSeq)
+    assert(compareSource.getLines.toSeq.map(lineToTweet) == testTweetsSeq)
     
     new File(testFile).delete
     testDir.delete
