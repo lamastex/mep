@@ -10,7 +10,7 @@ import java.util.Date
 import java.io.FileNotFoundException
 import scala.io.Source
 
-class BufferedTwitterStreamTest(volatileBuffer: Iterator[String], stopStreamInMs: Long) extends BufferedTwitterStream(volatileBuffer, stopStreamInMs) {
+class BufferedTwitterStreamTest(streamConfig: StreamConfig) extends BufferedTwitterStream(streamConfig) {
 
   var tweetsRead = 0
 
@@ -167,9 +167,7 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     val writeRateInMs = writeConfig.writeRate
     val writeDelayInMs = writeRateInMs // Delay before starting write job
 
-    var buffer: Iterator[String] = Iterator.empty
-
-    val streamer = new BufferedTwitterStreamTest(buffer, stopStreamInMs)
+    val streamer = new BufferedTwitterStreamTest(streamConfig)
     val idsToTrack: Seq[Long] = if (handlesToTrack.size > 0) {
       println("getting ids to track...")
       val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)

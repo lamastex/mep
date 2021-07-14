@@ -35,9 +35,11 @@ case class WriteConfig (
   * @param buffer The buffer to save tweets into.
   * @param stopStreamInMs If a positive value is given, the stream will stop after this number of ms, otherwise it will stream indefinitely. Note that there currently are no checks in place to make sure that the buffer is within memory limits. If the stream is to continue indefinitely, the buffer MUST be emptied in some other way, for example by writing it to disk.
   */  
-class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Long = 60000L) extends TwitterBasic with Runnable {
+class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic with Runnable {
   
+  var streamDuration: Long = streamConfig.streamDuration
   var idsToTrack: Seq[Long] = Seq.empty
+  var buffer: Iterator[String] = Iterator.empty
 
   def setIdsToTrack(ids: Seq[Long]): Unit = {
     idsToTrack = ids
@@ -116,7 +118,7 @@ class BufferedTwitterStream(var buffer: Iterator[String], val stopStreamInMs: Lo
       query.follow(idsToTrack: _*)
       twitterStream.filter(query)
     }
-    stopTwitterStreamInstance(twitterStream, stopStreamInMs)
+    stopTwitterStreamInstance(twitterStream, streamDuration)
   }
 }
 
@@ -309,7 +311,7 @@ object ThreadedTwitterStreamWithWrite {
 
     var buffer: Iterator[String] = Iterator.empty
 
-    val streamer = new BufferedTwitterStream(buffer, stopStreamInMs)
+    val streamer = new BufferedTwitterStream(streamConfig)
     val idsToTrack: Seq[Long] = if (handlesToTrack.size > 0) {
       println("getting ids to track...")
       val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)
