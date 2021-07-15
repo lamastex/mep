@@ -14,6 +14,8 @@ import twitter4j.FilterQuery
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Path, StandardCopyOption}
 import com.typesafe.config._
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
 
 case class StreamConfig (
   handlesFilePath: String,
@@ -45,8 +47,15 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
   var idsToTrack: Seq[Long] = Seq.empty
   var buffer: Iterator[TweetSchema] = Iterator.empty
 
-  def setIdsToTrack(ids: Seq[Long]): Unit = {
+  /*def setIdsToTrack(ids: Seq[Long]): Unit = {
     idsToTrack = ids
+  }*/
+
+  def setIdsFromFile(handleFilename: String): Unit = {
+    val handlesToTrack = IOHelper.readHandles(handleFilename)
+    val validIds = getValidTrackedUserIds(handlesToTrack)
+    println(s"${validIds.length} valid Ids tracked.")
+    idsToTrack = validIds
   }
   
   def handleStatus(status: Status): Unit = {
@@ -110,13 +119,12 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     .map(u => u.getId())
     .toSet
     .toSeq
-    .filter(_.isValidLong)
-
-  
+    .filter(_.isValidLong)  
   
   override def run(): Unit = {
     val twitterStream = getTwitterStreamInstance
     twitterStream.addListener(simpleStatusListener)
+    setIdsFromFile(streamConfig.handlesFilePath)
     if (idsToTrack.isEmpty) {
       twitterStream.sample
     } else {
@@ -201,6 +209,22 @@ object IOHelper {
       writeRate = writeConfig.getLong("write-rate")
     )
   }
+
+  def readHandles(handlesFilePath: String): Seq[String] = {
+    var handlesToTrack: Seq[String] = Seq.empty
+
+    try {
+      val handleReader = scala.io.Source.fromFile(handlesFilePath)
+      for {line <- handleReader.getLines} {
+        handlesToTrack = handlesToTrack :+ line
+      }
+      handleReader.close
+      printf("%d handles to track\n", handlesToTrack.size)
+    } catch {
+      case e: FileNotFoundException => println(handlesFilePath + " not found!")
+    }
+    return handlesToTrack
+  }
 }
 
 /**
@@ -217,11 +241,47 @@ object IOHelper {
   */  
 class AsyncWrite(
   streamer: BufferedTwitterStream, 
+  writeConfig: WriteConfig
+) extends Runnable {
+/* class AsyncWrite(
+  streamer: BufferedTwitterStream, 
   filename: String, 
   maxFileSizeBytes: Long = 10 * 1024 * 1024L,
   storageDirectory: String = ""
-) extends Runnable {
+) extends Runnable { */
+  private var currentConfig = writeConfig
+  private var runningJob: ScheduledFuture[_] = null
+
+  def setConfig(newConfig: WriteConfig): Unit = {
+    currentConfig = newConfig
+  }
+
+  def getConfig: WriteConfig = currentConfig
+
+  def startJob(pool: ScheduledExecutorService): Unit = {
+    runningJob = pool.scheduleAtFixedRate(
+      this, 
+      currentConfig.writeRate,
+      currentConfig.writeRate,
+      TimeUnit.MILLISECONDS)
+  }
+
+  def stopJob(mayInterruptIfRunning: Boolean): Boolean = 
+    runningJob.cancel(mayInterruptIfRunning)
+
+  def isRunning: Boolean = !(runningJob == null || runningJob.isCancelled() || runningJob.isDone())
+
+  def updateJob(pool: ScheduledExecutorService): Unit = {
+    stopJob(false)
+    while(isRunning) Thread.sleep(200) // Wait for job to finish
+    startJob(pool)
+  }
+
   override def run(): Unit = {
+    val filename = currentConfig.outputFilenames
+    val maxFileSizeBytes = currentConfig.maxFileSize
+    val storageDirectory = currentConfig.fullFilesDirectory
+
     val filePath = {
       val pathArray = filename.split('/').dropRight(1)
       pathArray.tail.foldLeft(pathArray.head)(_ + "/" + _)
@@ -241,7 +301,7 @@ class AsyncWrite(
       filenameWithTime = filename + java.time.Instant.now.getEpochSecond.toString + ".jsonl"
     }
 
-    val buffer = streamer.getBuffer()
+    val buffer = streamer.getBuffer.toList.toIterator
 
     // Writing into the last file
     IOHelper.writeBufferToFile(
@@ -285,56 +345,17 @@ object ThreadedTwitterStreamWithWrite {
     val writeConfig = IOHelper.getWriteConfig(mainConfig)
 
     val stopStreamInMs: Long = streamConfig.streamDuration
-    val handleFilename: String = streamConfig.handlesFilePath
-    val writeRateInMs: Long = writeConfig.writeRate
-    val maxFileSizeBytes: Long = writeConfig.maxFileSize
-    val outputFilenames: String = writeConfig.outputFilenames
-    val fullFilesDirectory: String = writeConfig.fullFilesDirectory
-
-    /*
-    val stopStreamInMs: Long = streamConfig.getLong("stream-duration")
-    val writeRateInMs: Long = streamConfig.getLong("write-rate")
-    val maxFileSizeBytes: Long = streamConfig.getLong("max-file-size")
-    val outputFilenames: String = streamConfig.getString("output-filenames")
-    val handleFilename: String = streamConfig.getString("handles-to-track")
-    val fullFilesDirectory: String = streamConfig.getString("completed-file-directory")
-    */
-
-    // get Handles to track
-    var handlesToTrack: Seq[String] = Seq.empty
-
-    try {
-      val handleReader = scala.io.Source.fromFile(handleFilename)
-      for {line <- handleReader.getLines} {
-        handlesToTrack = handlesToTrack :+ line
-      }
-      handleReader.close
-      printf("%d handles to track\n", handlesToTrack.size)
-    } catch {
-      case e: FileNotFoundException => println(handleFilename + " not found!")
-    }
 
     val pool = Executors.newScheduledThreadPool(2)
-    val writeDelayInMs = writeRateInMs // Delay before starting write job
-
-    var buffer: Iterator[String] = Iterator.empty
 
     val streamer = new BufferedTwitterStream(streamConfig)
-    val idsToTrack: Seq[Long] = if (handlesToTrack.size > 0) {
-      println("getting ids to track...")
-      val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)
-      printf("%d valid ids tracked\n", idsToTrack.size)
-      idsToTrack
-    } else Seq.empty
-    
-    streamer.setIdsToTrack(idsToTrack)
 
     // Start the Twitter stream
     pool.submit(streamer)
 
     // Create and start write jobs
-    val writeJob = new AsyncWrite(streamer, outputFilenames, maxFileSizeBytes, fullFilesDirectory)
-    pool.scheduleAtFixedRate(writeJob, writeDelayInMs, writeRateInMs, TimeUnit.MILLISECONDS)
+    val writeJob = new AsyncWrite(streamer, writeConfig)
+    writeJob.startJob(pool)
     
     // Wait until stream has finished
     if (stopStreamInMs > 0) {

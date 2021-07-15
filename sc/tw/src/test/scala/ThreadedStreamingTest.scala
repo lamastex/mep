@@ -135,12 +135,6 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     val streamConfig = IOHelper.getStreamConfig(mainConfig)
     val writeConfig = IOHelper.getWriteConfig(mainConfig)
 
-    /* 
-    val maxFileSizeBytes = streamConfig.getLong("max-file-size")
-    val outputFilenames = streamConfig.getString("output-filenames")
-    val fullFilesDirectory = streamConfig.getString("completed-file-directory")
-    */
-
     val maxFileSizeBytes = writeConfig.maxFileSize
     val outputFilenames = writeConfig.outputFilenames
     val fullFilesDirectory = writeConfig.fullFilesDirectory
@@ -155,46 +149,18 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
       files <- Option(new File(fullFilesDirectory).listFiles)
       file <- files if file.getName.endsWith(".jsonl")
     } file.delete()
-    
-    // get Handles to track
-    //val handleFilename = streamConfig.getString("handles-to-track")
-    val handleFilename = streamConfig.handlesFilePath
-    var handlesToTrack: Seq[String] = Seq.empty
-
-    try {
-      val handleReader = scala.io.Source.fromFile(handleFilename)
-      for {line <- handleReader.getLines} {
-        handlesToTrack = handlesToTrack :+ line
-      }
-      handleReader.close
-      printf("%d handles to track\n", handlesToTrack.size)
-    } catch {
-      case e: FileNotFoundException => println(handleFilename + " not found!")
-    }
 
     val pool = Executors.newScheduledThreadPool(2)
-    // val stopStreamInMs = streamConfig.getLong("stream-duration")
-    // val writeRateInMs = streamConfig.getLong("write-rate") // Delay between write jobs 
     val stopStreamInMs = streamConfig.streamDuration
-    val writeRateInMs = writeConfig.writeRate
-    val writeDelayInMs = writeRateInMs // Delay before starting write job
 
     val streamer = new BufferedTwitterStreamTest(streamConfig)
-    val idsToTrack: Seq[Long] = if (handlesToTrack.size > 0) {
-      println("getting ids to track...")
-      val idsToTrack = streamer.getValidTrackedUserIds(handlesToTrack)
-      printf("%d ids tracked\n", idsToTrack.size)
-      idsToTrack
-    } else Seq.empty
-    
-    streamer.setIdsToTrack(idsToTrack)
 
     // Start the Twitter stream
     pool.submit(streamer)
 
     // Create and start write jobs
-    val writeJob = new AsyncWrite(streamer, outputFilenames, maxFileSizeBytes, fullFilesDirectory)
-    pool.scheduleAtFixedRate(writeJob, writeDelayInMs, writeRateInMs, TimeUnit.MILLISECONDS)
+    val writer = new AsyncWrite(streamer, writeConfig)
+    writer.startJob(pool)
 
     // Wait until stream has finished
     Thread.sleep(stopStreamInMs)
