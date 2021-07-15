@@ -7,27 +7,15 @@ import java.util.concurrent.{
 }
 
 /**
-  * A class to write the buffered stream asynchronously.
+  * A class to asynchronously write the buffer in a BufferedTwitterStream to file.
   *
-  * @param streamer The object responsible for running the twitter stream and recording tweets into its buffer.
-  * @param filename The path and root file name of the files into which tweets are written.
-  * Files are named by (filename + timestamp + ".jsonl") where timestamp is
-  * Unix Epoch (seconds since 00:00:00 1/1/1970) when the file was created. 
-  * @param maxFileSizeBytes The maximum file size in Bytes. It is very unlikely that any file 
-  * is larger than this, but it is not completely guaranteed. Default 10 MB.
-  * @param storageDirectory If given a non-empty String, full files are moved to this path. 
-  * Directory name must contain trailing "/". Default empty string.
-  */  
+  * @param streamer Streamer with the buffer to write.
+  * @param writeConfig Configuration for the writer.
+  */
 class AsyncWrite(
   streamer: BufferedTwitterStream, 
   writeConfig: WriteConfig
 ) extends Runnable {
-/* class AsyncWrite(
-  streamer: BufferedTwitterStream, 
-  filename: String, 
-  maxFileSizeBytes: Long = 10 * 1024 * 1024L,
-  storageDirectory: String = ""
-) extends Runnable { */
   private var currentConfig = writeConfig
   private var runningJob: ScheduledFuture[_] = null
 
@@ -50,6 +38,11 @@ class AsyncWrite(
 
   def isRunning: Boolean = !(runningJob == null || runningJob.isCancelled() || runningJob.isDone())
 
+  /**
+    * Restarts the job, necessary to update write rate.
+    *
+    * @param pool The executor pool to run the job on.
+    */
   def updateJob(pool: ScheduledExecutorService): Unit = {
     stopJob(false)
     while(isRunning) Thread.sleep(200) // Wait for job to finish

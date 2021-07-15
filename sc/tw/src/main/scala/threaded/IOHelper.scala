@@ -14,6 +14,9 @@ import com.typesafe.config.{
   ConfigFactory
 }
 
+/**
+  * Helper object with various IO functions needed for the Twitter stream.
+  */
 object IOHelper {
 
   // Estimate of byte size of one tweet.
@@ -21,7 +24,12 @@ object IOHelper {
   // 4096 with a little headroom
   final val TWEETSIZE = 4096
 
-  // Returns the file with the largest name w.r.t. string comparison
+  /**
+    * Returns the file with the largest name w.r.t. string comparison.
+    *
+    * @param path Path to search for files.
+    * @return Largest filename w.r.t. string comparison, None if it cannot find a file.
+    */
   def getLastFile(path: String): Option[File] = {
     val files = Option(new File(path).listFiles)
     if (files.isDefined && files.get.filter(file => file.isFile).nonEmpty) {
@@ -29,6 +37,15 @@ object IOHelper {
     } else None
   }
 
+  /**
+    * Writes a buffer of tweets to file.
+    *
+    * @param file Full path to the file that should be written.
+    * @param buffer The buffer with tweets to be written.
+    * @param allowedBytes Number of bytes that are allowed to be written to the file.
+    * @param append If true, will append to an existing file.
+    * @return
+    */
   def writeBufferToFile(
     file: String, 
     buffer: Iterator[TweetSchema], 
@@ -66,6 +83,12 @@ object IOHelper {
     Files.move(filePath, destPath, StandardCopyOption.REPLACE_EXISTING)
   }
 
+  /**
+    * Reads a .conf file from disk.
+    *
+    * @param configFile Filename including path to config file
+    * @return The read config.
+    */
   def getConfig(configFile: String): Config = {
     ConfigFactory.parseFile(new File(configFile))
   }
@@ -95,6 +118,13 @@ object IOHelper {
     )
   }
 
+  /**
+    * Reads a file of Twitter handles from disk. 
+    * Each line of the file should be a single Twitter handle without @.
+    *
+    * @param handlesFilePath Filename, including path.
+    * @return Seq of read handles.
+    */
   def readHandles(handlesFilePath: String): Seq[String] = {
     var handlesToTrack: Seq[String] = Seq.empty
 

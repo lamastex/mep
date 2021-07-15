@@ -17,6 +17,11 @@ import java.util.concurrent.{
 import java.util.Date
 import scala.io.Source
 
+/**
+  * An extension of BufferedTwitterStream with some additional debug functionality.
+  *
+  * @param streamConfig
+  */
 class BufferedTwitterStreamTest(streamConfig: StreamConfig) extends BufferedTwitterStream(streamConfig) {
 
   var tweetsRead = 0
@@ -57,7 +62,7 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     val writeConfig = IOHelper.getWriteConfig(mainConfig)
     val updateConfig = IOHelper.getUpdateConfig(mainConfig)
 
-    val maxFileSizeBytes = writeConfig.maxFileSize
+    // Needed for determining if the right number of tweets are written
     val outputFilenames = writeConfig.outputFilenames
     val fullFilesDirectory = writeConfig.fullFilesDirectory
     val writeDir = outputFilenames.split("/").dropRight(1).mkString("/") + "/"

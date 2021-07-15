@@ -4,6 +4,15 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.ScheduledFuture
 
+/**
+  * A class which manages the configuration of a Twitter stream and 
+  * the writer associated with that stream.
+  *
+  * @param configFilePath Filename, including path, to the configuration file.
+  * @param streamer
+  * @param writer
+  * @param executorPool An executor pool to run the writer and this on.
+  */
 class AsyncUpdateConfig(
   configFilePath: String, 
   streamer: BufferedTwitterStream, 
@@ -14,6 +23,9 @@ class AsyncUpdateConfig(
   var currentConfig: UpdateConfig = null
   var runningJob: ScheduledFuture[_] = null
 
+  /**
+    * Starts the job for this instance. Note that currentConfig must be set before running this.
+    */
   def startJob: Unit = {
     runningJob = executorPool.scheduleAtFixedRate(
       this,
@@ -28,7 +40,7 @@ class AsyncUpdateConfig(
 
   def isRunning: Boolean = !(runningJob == null || runningJob.isCancelled() || runningJob.isDone())
 
-  def updateJob(pool: ScheduledExecutorService): Unit = {
+  def restartJob: Unit = {
     if (isRunning) stopJob(false)
     while(isRunning) Thread.sleep(200L)
     startJob
@@ -53,7 +65,7 @@ class AsyncUpdateConfig(
   def updateSelf(newConfig: UpdateConfig): Unit = {
     if (currentConfig != newConfig) {
       currentConfig = newConfig
-      updateJob(executorPool)
+      restartJob
     }
   }
   

@@ -24,11 +24,10 @@ import scala.collection.JavaConverters._
 
 
 /**
-  * A class that reads a Twitter stream into a buffer
+  * A class to read a Twitter stream into a buffer.
   *
-  * @param buffer The buffer to save tweets into.
-  * @param stopStreamInMs If a positive value is given, the stream will stop after this number of ms, otherwise it will stream indefinitely. Note that there currently are no checks in place to make sure that the buffer is within memory limits. If the stream is to continue indefinitely, the buffer MUST be emptied in some other way, for example by writing it to disk.
-  */  
+  * @param streamConfig Configuration for the stream.
+  */
 class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic with Runnable {
   
   var currentConfig: StreamConfig = streamConfig
@@ -38,8 +37,14 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
 
   def getBuffer(): Iterator[TweetSchema] = buffer
   
-  def lookupUserSNs(retweeterIds:Seq[String]) = {
-    val grouped = retweeterIds.grouped(100).toList 
+  /**
+    * Looks up the Twitter Users belonging to a Seq of handles.
+    *
+    * @param twitterHandles
+    * @return A list of users corresponding to the handles.
+    */
+  def lookupUserSNs(twitterHandles: Seq[String]) = {
+    val grouped = twitterHandles.grouped(100).toList 
     val twitter = getTwitterInstance
     for {group <- grouped  
       users = twitter.lookupUsers(group:_*)
@@ -47,6 +52,12 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     } yield user     
   }
 
+  /**
+    * Given a list of Twitter handles, returns the Twitter Ids corresponding to the handles.
+    *
+    * @param handles
+    * @return A Seq of the valid Ids.
+    */
   def getValidTrackedUserIds(handles: Seq[String]) = lookupUserSNs(handles)
     .map(u => u.getId())
     .toSet
@@ -78,6 +89,13 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     return query
   }
 
+  /**
+    * When the stream is updated with a new filter, there should be some
+    * overlap between the old stream and the new in order to not miss any tweets
+    * while the stream is restarting.
+    *
+    * @param streamOverlap Number of milliseconds to overlap by, default 15000 (15s).
+    */
   protected def patchStream(streamOverlap: Long = 15000L): Unit = {
     println("Building new stream.")
     val newStream = new TwitterStreamFactory(twitterStream.getConfiguration).getInstance
@@ -100,6 +118,11 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     patchStream()
   }
   
+  /**
+    * Handles an incoming status update by adding it to the buffer.
+    *
+    * @param status
+    */
   def handleStatus(status: Status): Unit = {
     val tweet = TweetSchema(status.getId, statusToGson(status), status.getCreatedAt.getTime)
     buffer = buffer ++ Iterator(tweet)

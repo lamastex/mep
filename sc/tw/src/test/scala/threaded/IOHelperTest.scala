@@ -13,6 +13,9 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
   }
 
   test("Write buffer") {
+    /**
+      * Reads a JSON line written by an AsyncWrite.
+      */
     def lineToTweet(line: String) = {
       val arr = line.split(":")
       val id = arr(1).split(",").head.toLong
