@@ -45,9 +45,9 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
   test("Threaded Streaming") {
 
     // Load config
-    val mainConfig = IOHelper.getConfig("src/test/resources/streamConfig.conf")
-    val streamConfig = IOHelper.getStreamConfig(mainConfig)
-    val writeConfig = IOHelper.getWriteConfig(mainConfig)
+    var mainConfig = IOHelper.getConfig("src/test/resources/streamConfig.conf")
+    var streamConfig = IOHelper.getStreamConfig(mainConfig)
+    var writeConfig = IOHelper.getWriteConfig(mainConfig)
 
     val maxFileSizeBytes = writeConfig.maxFileSize
     val outputFilenames = writeConfig.outputFilenames
@@ -76,8 +76,19 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     val writer = new AsyncWrite(streamer, writeConfig)
     writer.startJob(pool)
 
+    // Wait until half the test is done
+    Thread.sleep(stopStreamInMs/2)
+
+    // Read new config files
+    mainConfig = IOHelper.getConfig("src/test/resources/streamConfig2.conf")
+    writeConfig = IOHelper.getWriteConfig(mainConfig)
+
+    // Update write job
+    writer.setConfig(writeConfig)
+    writer.updateJob(pool)
+
     // Wait until stream has finished
-    Thread.sleep(stopStreamInMs)
+    Thread.sleep(stopStreamInMs/2)
 
     pool.shutdown()
     pool.awaitTermination(stopStreamInMs*2, TimeUnit.MILLISECONDS)
