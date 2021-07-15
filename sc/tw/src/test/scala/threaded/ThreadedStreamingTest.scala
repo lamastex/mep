@@ -1,13 +1,20 @@
 package org.lamastex.mep.tw
 
-import twitter4j.Status
-import twitter4j.TwitterStream
-import java.io.{File,FileWriter}
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import twitter4j.{
+  Status,
+  TwitterStream
+}
+import java.io.{
+  File,
+  FileWriter,
+  FileNotFoundException
+}
+import java.util.concurrent.{
+  Callable,
+  Executors,
+  TimeUnit
+}
 import java.util.Date
-import java.io.FileNotFoundException
 import scala.io.Source
 
 class BufferedTwitterStreamTest(streamConfig: StreamConfig) extends BufferedTwitterStream(streamConfig) {
@@ -20,7 +27,7 @@ class BufferedTwitterStreamTest(streamConfig: StreamConfig) extends BufferedTwit
     tweetsRead = tweetsRead + 1
   }
 
-  override def stopTwitterStreamInstance(twitterStream: TwitterStream, stopAfterMs: Long): Unit = {
+  override def stopTwitterStreamInstance(stopAfterMs: Long): Unit = {
     if(stopAfterMs > 0) {
       Thread.sleep(stopAfterMs)
       System.err.println("Stopping TwitterStreamInstance...")
@@ -44,7 +51,7 @@ class BufferedTwitterStreamTest(streamConfig: StreamConfig) extends BufferedTwit
 class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
   test("Threaded Streaming") {
 
-    // Load config
+    // Load config 
     var mainConfig = IOHelper.getConfig("src/test/resources/streamConfig.conf")
     var streamConfig = IOHelper.getStreamConfig(mainConfig)
     var writeConfig = IOHelper.getWriteConfig(mainConfig)
@@ -82,10 +89,14 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
     // Read new config files
     mainConfig = IOHelper.getConfig("src/test/resources/streamConfig2.conf")
     writeConfig = IOHelper.getWriteConfig(mainConfig)
+    streamConfig = IOHelper.getStreamConfig(mainConfig)
 
     // Update write job
     writer.setConfig(writeConfig)
     writer.updateJob(pool)
+
+    // Remove filter from stream
+    streamer.updateStream(streamConfig)
 
     // Wait until stream has finished
     Thread.sleep(stopStreamInMs/2)

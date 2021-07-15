@@ -13,6 +13,7 @@ import java.io.{
 }
 import twitter4j.{
   TwitterStream,
+  TwitterStreamFactory,
   StatusListener,
   Status,
   FilterQuery,
@@ -30,17 +31,56 @@ import scala.collection.JavaConverters._
   */  
 class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic with Runnable {
   
-  var streamDuration: Long = streamConfig.streamDuration
+  var currentConfig: StreamConfig = streamConfig
   var idsToTrack: Seq[Long] = Seq.empty
   var buffer: Iterator[TweetSchema] = Iterator.empty
+  var twitterStream: TwitterStream = null
 
-  def setIdsFromFile(handleFilename: String): Unit = {
+  protected def getFollowIdsFromFile(handleFilename: String): (Seq[Long], Boolean) = {
     val handlesToTrack = IOHelper.readHandles(handleFilename)
-    if (handlesToTrack.nonEmpty) {
-      val validIds = getValidTrackedUserIds(handlesToTrack)
+    if (handlesToTrack.nonEmpty)
+      (getValidTrackedUserIds(handlesToTrack), false)
+    else
+      (Seq.empty, true)
+  }
+
+  protected def setFollowIdsFromFile(handleFilename: String): Unit = {
+    val (validIds, emptyHandles) = getFollowIdsFromFile(handleFilename)
+    if (!emptyHandles) {
       println(s"${validIds.length} valid Ids tracked.")
       idsToTrack = validIds
+    } else {
+      println("No valid Ids tracked. Streaming random sample.")
+      idsToTrack = Seq.empty
     }
+  }
+
+  protected def getQuery: FilterQuery = {
+    val query = new FilterQuery()
+    query.follow(idsToTrack: _*)
+    return query
+  }
+
+  protected def patchStream(streamOverlap: Long = 15000L): Unit = {
+    println("Building new stream.")
+    val newStream = new TwitterStreamFactory(twitterStream.getConfiguration).getInstance
+    newStream.addListener(simpleStatusListener)
+    println("Starting new stream.")
+    if (idsToTrack.nonEmpty)
+      newStream.filter(getQuery)
+    else
+      newStream.sample
+    Thread.sleep(10000L)
+    println("Cleaning up old stream.")
+    twitterStream.cleanUp
+    twitterStream = newStream
+  }
+
+  def updateStream(newConfig: StreamConfig): Unit = {
+    setFollowIdsFromFile(newConfig.handlesFilePath)
+    currentConfig = newConfig
+    getQuery
+    patchStream()
   }
   
   def handleStatus(status: Status): Unit = {
@@ -70,7 +110,8 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     }
   }
   
-  override def stopTwitterStreamInstance(twitterStream: TwitterStream, stopAfterMs: Long): Unit = {
+  // override def stopTwitterStreamInstance(twitterStream: TwitterStream, stopAfterMs: Long): Unit = {
+  def stopTwitterStreamInstance(stopAfterMs: Long): Unit = {
     if(stopAfterMs > 0) {
       Thread.sleep(stopAfterMs)
       System.err.println("Stopping TwitterStreamInstance...")
@@ -107,16 +148,15 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     .filter(_.isValidLong)  
   
   override def run(): Unit = {
-    val twitterStream = getTwitterStreamInstance
+    twitterStream = getTwitterStreamInstance
+    setFollowIdsFromFile(currentConfig.handlesFilePath)
     twitterStream.addListener(simpleStatusListener)
-    setIdsFromFile(streamConfig.handlesFilePath)
     if (idsToTrack.isEmpty) {
       twitterStream.sample
     } else {
-      val query = new FilterQuery()
-      query.follow(idsToTrack: _*)
+      val query = getQuery
       twitterStream.filter(query)
     }
-    stopTwitterStreamInstance(twitterStream, streamDuration)
+    stopTwitterStreamInstance(currentConfig.streamDuration)
   }
 }
