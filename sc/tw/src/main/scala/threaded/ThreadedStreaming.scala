@@ -36,7 +36,24 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
   var buffer: Iterator[TweetSchema] = Iterator.empty
   var twitterStream: TwitterStream = null
 
-  protected def getFollowIdsFromFile(handleFilename: String): (Seq[Long], Boolean) = {
+  def getBuffer(): Iterator[TweetSchema] = buffer
+  
+  def lookupUserSNs(retweeterIds:Seq[String]) = {
+    val grouped = retweeterIds.grouped(100).toList 
+    val twitter = getTwitterInstance
+    for {group <- grouped  
+      users = twitter.lookupUsers(group:_*)
+      user <- users.asScala 
+    } yield user     
+  }
+
+  def getValidTrackedUserIds(handles: Seq[String]) = lookupUserSNs(handles)
+    .map(u => u.getId())
+    .toSet
+    .toSeq
+    .filter(_.isValidLong)  
+
+  def getFollowIdsFromFile(handleFilename: String): (Seq[Long], Boolean) = {
     val handlesToTrack = IOHelper.readHandles(handleFilename)
     if (handlesToTrack.nonEmpty)
       (getValidTrackedUserIds(handlesToTrack), false)
@@ -110,7 +127,6 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     }
   }
   
-  // override def stopTwitterStreamInstance(twitterStream: TwitterStream, stopAfterMs: Long): Unit = {
   def stopTwitterStreamInstance(stopAfterMs: Long): Unit = {
     if(stopAfterMs > 0) {
       Thread.sleep(stopAfterMs)
@@ -129,23 +145,6 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
       printf("%d tweets remaining in buffer\n", buffer.size)
     }
   }
-  
-  def getBuffer(): Iterator[TweetSchema] = buffer
-  
-  def lookupUserSNs(retweeterIds:Seq[String]) = {
-    val grouped = retweeterIds.grouped(100).toList 
-    val twitter = getTwitterInstance
-    for {group <- grouped  
-      users = twitter.lookupUsers(group:_*)
-      user <- users.asScala 
-    } yield user     
-  }
-
-  def getValidTrackedUserIds(handles: Seq[String]) = lookupUserSNs(handles)
-    .map(u => u.getId())
-    .toSet
-    .toSeq
-    .filter(_.isValidLong)  
   
   override def run(): Unit = {
     twitterStream = getTwitterStreamInstance

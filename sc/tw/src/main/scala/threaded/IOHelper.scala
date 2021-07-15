@@ -88,6 +88,13 @@ object IOHelper {
     )
   }
 
+  def getUpdateConfig(config: Config): UpdateConfig = {
+    val updateConfig = config.getConfig("updateConfig")
+    UpdateConfig(
+      updateRate = updateConfig.getLong("update-rate")
+    )
+  }
+
   def readHandles(handlesFilePath: String): Seq[String] = {
     var handlesToTrack: Seq[String] = Seq.empty
 

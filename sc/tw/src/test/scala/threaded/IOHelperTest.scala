@@ -85,5 +85,8 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
     val writeConfig = IOHelper.getWriteConfig(completeConfigTest)
     assert(writeConfig.writeRate == 10000L)
     assert(writeConfig.fullFilesDirectory == "tmp/full/")
+
+    val updateConfig = IOHelper.getUpdateConfig(completeConfigTest)
+    assert(updateConfig.updateRate == 30000L)
   }
 }

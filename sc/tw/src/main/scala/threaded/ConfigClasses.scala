@@ -12,6 +12,10 @@ case class WriteConfig (
   writeRate: Long
 )
 
+case class UpdateConfig (
+  updateRate: Long
+)
+
 case class TweetSchema (
   id: Long, 
   json: String, 
