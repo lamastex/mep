@@ -20,6 +20,7 @@ object ThreadedTwitterStreamWithWrite {
     val mainConfig = IOHelper.getConfig(configFile)
     val streamConfig = IOHelper.getStreamConfig(mainConfig)
     val writeConfig = IOHelper.getWriteConfig(mainConfig)
+    val updateConfig = IOHelper.getUpdateConfig(mainConfig)
 
     val stopStreamInMs: Long = streamConfig.streamDuration
 
@@ -31,8 +32,16 @@ object ThreadedTwitterStreamWithWrite {
     pool.submit(streamer)
 
     // Create and start write jobs
-    val writeJob = new AsyncWrite(streamer, writeConfig)
-    writeJob.startJob(pool)
+    val writer = new AsyncWrite(streamer, writeConfig)
+    writer.startJob(pool)
+
+    val updateJob = new AsyncUpdateConfig(
+      configFile,
+      streamer,
+      writer,
+      pool
+    )
+    updateJob.updateSelf(updateConfig)
     
     // Wait until stream has finished
     if (stopStreamInMs > 0) {

@@ -47,7 +47,6 @@ class BufferedTwitterStreamTest(streamConfig: StreamConfig) extends BufferedTwit
     }
   }
 }
-
 class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
   test("Threaded Streaming") {
 
@@ -96,18 +95,6 @@ class ThreadedStreamingTest extends org.scalatest.funsuite.AnyFunSuite {
 
     // Wait until half the test is done
     Thread.sleep(stopStreamInMs/2)
-
-    /* // Read new config files
-    mainConfig = IOHelper.getConfig("src/test/resources/streamConfig2.conf")
-    writeConfig = IOHelper.getWriteConfig(mainConfig)
-    streamConfig = IOHelper.getStreamConfig(mainConfig)
-
-    // Update write job
-    writer.setConfig(writeConfig)
-    writer.updateJob(pool)
-
-    // Remove filter from stream
-    streamer.updateStream(streamConfig) */
 
     // Wait until stream has finished
     Thread.sleep(stopStreamInMs/2)
