@@ -7,8 +7,8 @@ class parseTwitter4jTest extends org.scalatest.funsuite.AnyFunSuite{
     import spark.implicits._
     spark.sql("set spark.sql.legacy.timeParserPolicy=LEGACY")
 
-    val schema_twarc = DataType.fromJson(spark.read.text("schemas/twitter4j_schema.json").first.getString(0)).asInstanceOf[StructType]
-    val twitter4jDF = spark.read.option("mode", "DROPMALFORMED").schema(schema_twarc).json("src/test/scala/resources/test_twitter4j.jsonl")
+    val schema_twitter4j = DataType.fromJson(spark.read.text("schemas/twitter4j_schema.json").first.getString(0)).asInstanceOf[StructType]
+    val twitter4jDF = spark.read.option("mode", "DROPMALFORMED").schema(schema_twitter4j).json("src/test/scala/resources/test_twitter4j.jsonl")
     
     test("test converting twitter4j data to TTT") {
         TTTConverters.tweetsDF2TTTDF(twitter4jDF).as[TTTFormats.TTT].show()

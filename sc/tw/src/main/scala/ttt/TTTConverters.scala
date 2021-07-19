@@ -1,15 +1,11 @@
 package org.lamastex.mep.tw.ttt
-import org.apache.spark.sql.types.{StructType, StructField, StringType};
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.ColumnName
+import org.apache.spark.sql.types.TimestampType;
+import org.apache.spark.sql.functions.{col,lit,when,unix_timestamp,element_at}
 import org.apache.spark.sql.DataFrame
-//import org.apache.spark.sql.Row
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.sql.Timestamp
 object TTTConverters{   
-
+/*
+Select and does the necessary transformations on twitter4j dataframe to get it to the convert it to an TTT dataset
+*/
   def tweetsDF2TTTDF(tweetsInputDF: DataFrame): DataFrame = {
  tweetsInputDF.select(
                       unix_timestamp(col("createdAt"), """MMM dd, yyyy hh:mm:ss a""").cast(TimestampType).as("CurrentTweetDate"),
@@ -74,7 +70,9 @@ object TTTConverters{
 .withColumn("error",lit(null))
 
 }
-
+/*
+Select and does the necessary transformations on twitter4j dataframe to get it to the convert it to an TTTUrlsAndHashtags dataset
+*/
 def tweetsDF2TTTDFWithURLsAndHashtags(tweetsInputDF: DataFrame): DataFrame = {
 
   tweetsInputDF.select(
@@ -142,8 +140,10 @@ def tweetsDF2TTTDFWithURLsAndHashtags(tweetsInputDF: DataFrame): DataFrame = {
 .withColumn("Weight", lit(1L))
 .withColumn("error",lit(null))
 }
+/*
+  Select and does the necessary transformations on twarc dataframe to get it to the convert it to an TTT dataset
+  */
   def twarcTTTDF(tweetsInputDF: DataFrame): DataFrame = {
-    val list_ =udf(() => List.empty[Long])
     tweetsInputDF.select(
                         unix_timestamp(col("created_at"), """EEE MMM dd HH:mm:ss ZZZZ yyyy""").cast(TimestampType).as("CurrentTweetDate"),
                         col("id").as("CurrentTwID"),  
@@ -208,7 +208,9 @@ def tweetsDF2TTTDFWithURLsAndHashtags(tweetsInputDF: DataFrame): DataFrame = {
       .withColumn("error",lit(null))
  
   }
-
+  /*
+  Select and does the necessary transformations on twarc dataframe to get it to the convert it to an TTTUrlsAndHashtags dataset
+  */
   def twarcTTTDFWithURLsAndHashtags(tweetsInputDF: DataFrame): DataFrame = {
     tweetsInputDF.select(
                         unix_timestamp(col("created_at"), """EEE MMM dd HH:mm:ss ZZZZ yyyy""").cast(TimestampType).as("CurrentTweetDate"),
@@ -277,7 +279,9 @@ def tweetsDF2TTTDFWithURLsAndHashtags(tweetsInputDF: DataFrame): DataFrame = {
 
   }
 
-
+/*
+  Select and does the necessary transformations on twarc dataframe to get it to the convert it to an TTTRTLikesAndMedia dataset
+  */
 def twarcTTTDFWithRetweetsLikesAndMedia(tweetsInputDF: DataFrame): DataFrame = {
   tweetsInputDF.select(
                         unix_timestamp(col("created_at"), """EEE MMM dd HH:mm:ss ZZZZ yyyy""").cast(TimestampType).as("CurrentTweetDate"),
@@ -343,11 +347,12 @@ def twarcTTTDFWithRetweetsLikesAndMedia(tweetsInputDF: DataFrame): DataFrame = {
         .when(col("UMentionRTid").isNotNull && col("UMentionQTid").isNull, "RetweetMention")
         .when(col("UMentionRTid").isNull && col("UMentionQTid").isNotNull, "QuotedMention")
         .when(col("UMentionRTid").isNull && col("UMentionQTid").isNull, "AuthoredMention")
-      .otherwise("NoMention")) //As far as I can tell NoMention cant happen, check with Raaz
+      .otherwise("NoMention")) 
       .withColumn("Weight", lit(1L))
       .withColumn("error",lit(null))
   }
   /*
+    val list_ =udf(() => List.empty[Long])
    .withColumn("MentionType", 
         when((size(col("UMentionRTid")) =!= 0) && (size(col("UMentionQTid")) =!= 0), "RetweetAndQuotedMention")
         .when((size(col("UMentionRTid")) =!= 0) && (size(col("UMentionQTid")) === 0), "RetweetMention")
