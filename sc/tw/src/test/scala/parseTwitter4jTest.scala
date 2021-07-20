@@ -1,6 +1,8 @@
 package org.lamastex.mep.tw.ttt
 import org.apache.spark.sql.types.{StructType,DataType};
 import org.apache.spark.sql.SparkSession
+import org.lamastex.mep.tw.ttt.TTTFormats._
+
 
 class parseTwitter4jTest extends org.scalatest.funsuite.AnyFunSuite{
     val spark = SparkSession.builder.appName("test").config("spark.master", "local").getOrCreate()
@@ -16,5 +18,12 @@ class parseTwitter4jTest extends org.scalatest.funsuite.AnyFunSuite{
 
     test("test converting twitter4j data to TTTURLsAndHashtags") {
         TTTConverters.tweetsDF2TTTDFWithURLsAndHashtags(twitter4jDF).as[TTTFormats.TTTURLsAndHashtags].show()
+    }
+
+     test("test the twitter4jToTTT reader") {
+        spark.read.twitter4jToTTT("schemas/twitter4j_schema.json","src/test/scala/resources/test_twitter4j.jsonl").show()
+    }
+    test("test the twitter4jToTTTURlsAndHashtags reader") {
+        spark.read.twitter4jToTTTURlsAndHashtags("schemas/twitter4j_schema.json","src/test/scala/resources/test_twitter4j.jsonl").show()
     }
 }
