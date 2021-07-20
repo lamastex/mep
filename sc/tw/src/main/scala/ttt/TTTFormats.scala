@@ -1,5 +1,9 @@
 package org.lamastex.mep.tw.ttt
 import java.sql.Timestamp
+import org.apache.spark.sql.DataFrameReader
+import org.apache.spark.sql.types.{StructType,DataType};
+import org.apache.spark.sql.Dataset
+import org.lamastex.mep.tw.ttt.TTTConverters._
 object TTTFormats{
     /**
     * @param CurrentTweetDate
