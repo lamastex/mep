@@ -8,3 +8,7 @@ Project MEP: Meme Evolution programme. A python toolkit to do statistical experi
 
 See [mep/py](py/)
 
+# mep/r
+Project MEP: Meme Evolution programme. An R toolkit to do statistical experiments in Twitter. 
+
+See [mep/r](r/)
