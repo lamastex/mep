@@ -1,4 +1,5 @@
 server/credentials/*
+!server/credentials/*.template
 .terraform.lock.hcl
 *.tfstate*
 */.terraform
