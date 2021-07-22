@@ -1,0 +1,59 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - docker.io
+  - unzip
+  - inotify-tools
+
+write_files:
+  - content: ${filebase64("${twitter-credentials}")}
+    encoding: b64
+    owner: root:root
+    path: /home/ubuntu/credentials/twitter/application.conf
+    permissions: '0444'
+  - content: ${filebase64("${known-hosts}")}
+    encoding: b64
+    owner: root:root
+    path: /root/.ssh/known_hosts
+    permissions: '0666'
+  - content: ${filebase64("${github-credentials}")}
+    encoding: b64
+    owner: root:root
+    path: /root/.ssh/id_rsa
+    permissions: '0400'
+  - content: ${filebase64("${docker-start}")}
+    encoding: b64
+    owner: root:root
+    path: /home/ubuntu/docker-start.sh
+    permissions: '0555'
+
+runcmd:
+  - 'sudo chmod 666 /var/run/docker.sock'
+  - 'cd /home/ubuntu'
+  - 'curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip'
+  - 'unzip awscliv2.zip'
+  - './aws/install'
+  - 'rm awscliv2.zip'
+  - 'eval "$(ssh-agent -s)"'
+  - 'sleep 5'
+  - 'ssh-add /root/.ssh/id_rsa'
+  - 'sleep 2'
+  - 'git clone git@github.com:lamastex/mep.git'
+  - 'mv credentials/twitter/application.conf mep/sc/tw/src/main/resources/application.conf'
+  - 'rm mep/sc/tw/build_Sp2x_Sc3_13.sbt'
+  - 'mv mep/sc/tw twitter-scala'
+  - 'rm -rf mep'
+  - 'git clone git@github.com:${config-repo-owner}/${config-repo}'
+  - 'mv ${config-repo}/ingestion twitter-config'
+  - 'mv twitter-config/copyJsonToS3.sh .'
+  - 'mv twitter-config/monitor-directory.sh .'
+  - 'rm -rf ${config-repo}'
+  - 'mkdir files-being-written-to'
+  - 'mkdir files-complete'
+  - 'mkdir files-to-s3'
+  - 'sudo chown -R ubuntu /home/ubuntu'
+  - 'chmod +x copyJsonToS3.sh'
+  - 'chmod +x monitor-directory.sh'
+  - 'runuser -u ubuntu -- ./monitor-directory.sh &'
