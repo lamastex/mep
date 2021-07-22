@@ -14,6 +14,6 @@ Project MEP: Meme Evolution programme. An R toolkit to do statistical experiment
 See [mep/r](r/)
 
 # mep/infra
-Project MEP: Meme Evolution programme. Infrastructure as Code via terraform 
+Project MEP: Meme Evolution programme. Infrastructure as Code via [terraform.io](https://www.terraform.io/) 
 
-See [mep/infra](infra/tf/)
+See [mep/infra/tf](infra/tf/)
