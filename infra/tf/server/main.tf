@@ -10,8 +10,8 @@ terraform {
 
 provider "aws" {
   shared_credentials_file = "${path.module}/credentials/aws-credentials"
-  profile = "default"
-  region  = "eu-west-1"
+  profile                 = "default"
+  region                  = "eu-west-1"
 }
 
 resource "aws_instance" "ec2_instance" {

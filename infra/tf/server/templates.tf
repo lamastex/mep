@@ -10,9 +10,9 @@ data "template_file" "instance_startup_script" {
   vars = {
     twitter-credentials = "${path.module}/credentials/application.conf"
     github-credentials  = "${path.module}/credentials/github-ssh"
-    known-hosts = "${path.module}/resources/known_hosts"
-    docker-start = "${path.module}/resources/docker-start.sh"
-    config-repo = file("${path.module}/credentials/config-repository")
-    config-repo-owner = file("${path.module}/credentials/config-repo-owner")
+    known-hosts         = "${path.module}/resources/known_hosts"
+    docker-start        = "${path.module}/resources/docker-start.sh"
+    config-repo         = file("${path.module}/credentials/config-repository")
+    config-repo-owner   = file("${path.module}/credentials/config-repo-owner")
   }
 }
