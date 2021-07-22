@@ -22,7 +22,7 @@ resource "aws_instance" "ec2_instance" {
   vpc_security_group_ids      = [aws_security_group.group.id]
   iam_instance_profile        = aws_iam_instance_profile.read_write.name
   tags = {
-    Name = "EC2 Instance"
+    Name = "twitter-stream-ingestion"
   }
 
   user_data = data.template_file.instance_startup_script.rendered
