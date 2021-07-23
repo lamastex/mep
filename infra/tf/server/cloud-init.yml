@@ -28,6 +28,16 @@ write_files:
     owner: root:root
     path: /home/ubuntu/docker-start.sh
     permissions: '0555'
+  - content: ${filebase64("${contingency-move}")}
+    encoding: b64
+    owner: root:root
+    path: /home/ubuntu/contingency-move.sh
+    permissions: '0555'
+  - content: ${filebase64("${contingency-monitor}")}
+    encoding: b64
+    owner: root:root
+    path: /home/ubuntu/contingency-monitor.sh
+    permissions: '0555'
 
 runcmd:
   - 'sudo chmod 666 /var/run/docker.sock'
@@ -56,4 +66,7 @@ runcmd:
   - 'sudo chown -R ubuntu /home/ubuntu'
   - 'chmod +x copyJsonToS3.sh'
   - 'chmod +x monitor-directory.sh'
+  - 'chmod +x contingency-move.sh'
+  - 'chmod +x contingency-monitor.sh'
   - 'runuser -u ubuntu -- ./monitor-directory.sh &'
+  - 'runuser -u ubuntu -- ./contingency-monitor.sh &'

@@ -16,7 +16,7 @@ provider "aws" {
 
 resource "aws_instance" "ec2_instance" {
   ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t2.small"
+  instance_type               = "t2.medium"
   associate_public_ip_address = true
   key_name                    = aws_key_pair.ssh-key.key_name
   vpc_security_group_ids      = [aws_security_group.group.id]
