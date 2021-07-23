@@ -5,9 +5,8 @@ import org.apache.spark.sql.SparkSession
 import scala.util.Try
 import org.lamastex.mep.tw.ttt.TTTFormats._
 import sys.process._
-import scala.io.Source
 
-class parseTwarcTest extends org.scalatest.funsuite.AnyFunSuite{
+class ParseTwarcTest extends org.scalatest.funsuite.AnyFunSuite{
   //generates the testfile
   "bash /root/GIT/py/twarc/getTwarcFiles.sh" !!
   //spark configurations 
@@ -18,14 +17,12 @@ class parseTwarcTest extends org.scalatest.funsuite.AnyFunSuite{
   val schemaPath: String = "schemas/twarc_v1.1_schema.json"
   val wrongSchemaPath: String = "schemas/twarc_wrong_schema.json"
   val testFilePath: String = "src/test/resources/test_twarc.jsonl"
-  
   //neeeded schemas
   val schema = DataType.fromJson(spark.read.text(schemaPath).first.getString(0)).asInstanceOf[StructType]
   val wrongSchema = DataType.fromJson(spark.read.text(wrongSchemaPath).first.getString(0)).asInstanceOf[StructType]
   //needed dataframes
   val twarcDF = spark.read.option("mode", "DROPMALFORMED").schema(schema).json(testFilePath)
   val wrongSchematwarcDF =spark.read.option("mode", "DROPMALFORMED").schema(wrongSchema).json(testFilePath)
-
 
   test("testing to read data from twarc as TTT"){
     TTTConverters.twarcTTTDF(twarcDF).as[TTTFormats.TTT].show()
