@@ -1,1 +1,4 @@
 trackedHandles.txt.nouse
+*.jsonl
+!testTweets.jsonl
+

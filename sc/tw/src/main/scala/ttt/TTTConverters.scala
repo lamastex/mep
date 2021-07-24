@@ -366,4 +366,3 @@ def twarcTTTDFWithRetweetsLikesAndMedia(tweetsInputDF: DataFrame): DataFrame = {
       .withColumn("UMentionASsN", when(col("UMentionASsN").isNull, list_()).otherwise(col("UMentionASsN")))
       */
 }
-  

@@ -4,6 +4,8 @@ import org.apache.spark.sql.DataFrameReader
 import org.apache.spark.sql.types.{StructType,DataType};
 import org.apache.spark.sql.Dataset
 import org.lamastex.mep.tw.ttt.TTTConverters._
+import org.apache.spark.sql.Row
+
 object TTTFormats{
     /**
     * @param CurrentTweetDate
@@ -310,6 +312,15 @@ object TTTFormats{
 
         def twitter4jToTTTURlsAndHashtags(schema_path: String,inputPath: String): Dataset[TTTURLsAndHashtags] = {
             twitter4jToTTTURlsAndHashtags(schema_path,Seq(inputPath): _*)
-        } 
+        }
+
+        def twitter4jDeltaToTTT(schema_path: String,deltaPath: String): Dataset[TTT] = {
+            val schema_twitter4j = DataType.fromJson(dfReader.text(schema_path).first.getString(0)).asInstanceOf[StructType]
+            val deltaDF =dfReader.format("delta").load(deltaPath)
+            import deltaDF.sparkSession.implicits._
+            val jsonStringDF = deltaDF.map({case Row(val0:Long, val1: String, val2: Timestamp) => val1})
+            val ds = tweetsDF2TTTDF(dfReader.option("mode", "DROPMALFORMED").schema(schema_twitter4j).json(jsonStringDF))
+            ds.as[TTT]
+        }  
     }
 }
