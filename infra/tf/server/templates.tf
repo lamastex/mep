@@ -12,6 +12,8 @@ data "template_file" "instance_startup_script" {
     github-credentials  = "${path.module}/credentials/github-ssh"
     known-hosts         = "${path.module}/resources/known_hosts"
     docker-start        = "${path.module}/resources/docker-start.sh"
+    contingency-move    = "${path.module}/resources/contingency-move.sh"
+    contingency-monitor = "${path.module}/resources/contingency-monitor.sh"
     config-repo         = file("${path.module}/credentials/config-repository")
     config-repo-owner   = file("${path.module}/credentials/config-repo-owner")
   }
