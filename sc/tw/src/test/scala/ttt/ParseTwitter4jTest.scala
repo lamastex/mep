@@ -50,5 +50,4 @@ class ParseTwitter4jTest extends org.scalatest.funsuite.AnyFunSuite{
     test("test the twitter4jToTTTURlsAndHashtags reader") {
         spark.read.twitter4jToTTTURlsAndHashtags(schemaPath,testFileReaderPath).show()
     }
-    
 }

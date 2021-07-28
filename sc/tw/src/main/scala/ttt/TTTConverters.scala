@@ -2,10 +2,12 @@ package org.lamastex.mep.tw.ttt
 import org.apache.spark.sql.types.TimestampType;
 import org.apache.spark.sql.functions.{col,lit,when,unix_timestamp,element_at}
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions.udf
 object TTTConverters{   
 /*
 Select and does the necessary transformations on twitter4j dataframe to get it to the convert it to an TTT dataset
 */
+val list_ =udf((x:Long) => List.empty[String])
   def tweetsDF2TTTDF(tweetsInputDF: DataFrame): DataFrame = {
     tweetsInputDF.select(
                           unix_timestamp(col("createdAt"), """MMM dd, yyyy hh:mm:ss a""").cast(TimestampType).as("CurrentTweetDate"),
@@ -68,7 +70,7 @@ Select and does the necessary transformations on twitter4j dataframe to get it t
                             .when(col("UMentionRTid").isNull && col("UMentionQTid").isNull, "AuthoredMention")
                             .otherwise("NoMention"))
                         .withColumn("Weight", lit(1L))
-                        .withColumn("error",lit(null))
+                        .withColumn("errors",list_(col("Weight")))
 }
 /*
 Select and does the necessary transformations on twitter4j dataframe to get it to the convert it to an TTTUrlsAndHashtags dataset
@@ -137,7 +139,7 @@ def tweetsDF2TTTDFWithURLsAndHashtags(tweetsInputDF: DataFrame): DataFrame = {
                           .when(col("UMentionRTid").isNull && col("UMentionQTid").isNull, "AuthoredMention")
                           .otherwise("NoMention"))
                       .withColumn("Weight", lit(1L))
-                      .withColumn("error",lit(null))
+                      .withColumn("errors",list_(col("Weight")))
 }
 /*
   Select and does the necessary transformations on twarc dataframe to get it to the convert it to an TTT dataset
@@ -204,7 +206,7 @@ def tweetsDF2TTTDFWithURLsAndHashtags(tweetsInputDF: DataFrame): DataFrame = {
                           .when(col("UMentionRTid").isNull && col("UMentionQTid").isNull, "AuthoredMention")
                         .otherwise("NoMention")) //As far as I can tell NoMention cant happen, check with Raaz
                         .withColumn("Weight", lit(1L))
-                        .withColumn("error",lit(null))
+                        .withColumn("errors",list_(col("Weight")))
   }
   /*
   Select and does the necessary transformations on twarc dataframe to get it to the convert it to an TTTUrlsAndHashtags dataset
@@ -273,8 +275,7 @@ def tweetsDF2TTTDFWithURLsAndHashtags(tweetsInputDF: DataFrame): DataFrame = {
                           .when(col("UMentionRTid").isNull && col("UMentionQTid").isNull, "AuthoredMention")
                         .otherwise("NoMention")) //As far as I can tell NoMention cant happen, check with Raaz
                         .withColumn("Weight", lit(1L))
-                        .withColumn("error",lit(null))
-
+                        .withColumn("errors",list_(col("Weight")))
   }
 
 /*
@@ -347,7 +348,7 @@ def twarcTTTDFWithRetweetsLikesAndMedia(tweetsInputDF: DataFrame): DataFrame = {
                         .when(col("UMentionRTid").isNull && col("UMentionQTid").isNull, "AuthoredMention")
                       .otherwise("NoMention")) 
                       .withColumn("Weight", lit(1L))
-                      .withColumn("error",lit(null))
+                      .withColumn("errors",list_(col("Weight")))
   }
   /*
     val list_ =udf(() => List.empty[Long])
