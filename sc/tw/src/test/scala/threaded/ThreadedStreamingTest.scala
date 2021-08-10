@@ -27,7 +27,13 @@ class BufferedTwitterStreamTest(streamConfig: StreamConfig) extends BufferedTwit
   var tweetsRead = 0
 
   override def handleStatus(status: Status): Unit = {
-    val tweet = TweetSchema(status.getId, statusToGson(status), status.getCreatedAt.getTime)
+    val tweet = TweetSchema(
+      status.getId, 
+      statusToGson(status), 
+      status.getCreatedAt.getTime,
+      status.getUser.getId,
+      "status"
+    )
     buffer = buffer ++ Iterator(tweet)
     tweetsRead = tweetsRead + 1
   }

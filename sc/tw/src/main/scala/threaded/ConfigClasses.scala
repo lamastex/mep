@@ -19,5 +19,7 @@ case class UpdateConfig (
 case class TweetSchema (
   id: Long, 
   json: String, 
-  time: Long
+  time: Long,
+  userID: Long,
+  statusType: String
 )

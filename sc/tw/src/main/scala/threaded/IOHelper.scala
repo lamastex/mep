@@ -49,17 +49,17 @@ object IOHelper {
   def writeBufferToFile(
     file: String, 
     buffer: Iterator[TweetSchema], 
-    allowedBytes: Long, // max Bytes written to the file
+    allowedBytes: Long,
     append: Boolean = false
   ): Iterator[TweetSchema] = {
     println("Writing to " + file)
     val writer = new FileWriter(new File(file), append)
     var bytesWritten = 0L
-    var nextTweet = TweetSchema(0L,"",0L)
+    var nextTweet = TweetSchema(0L,"",0L,0L,"")
     var nextLine = ""
     while(buffer.hasNext && bytesWritten + nextLine.getBytes.length < allowedBytes - TWEETSIZE) {
       nextTweet = buffer.next
-      nextLine = s"""{"tweetId":${nextTweet.id},"json":${nextTweet.json},"time":${nextTweet.time}}\n"""
+      nextLine = s"""{"tweetId":${nextTweet.id},"json":${nextTweet.json},"time":${nextTweet.time},"userId":${nextTweet.userID},"statusType":"${nextTweet.statusType}"}\n"""
       writer.write(nextLine)
       bytesWritten += nextLine.getBytes.length
     }

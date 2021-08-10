@@ -124,8 +124,25 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     * @param status
     */
   def handleStatus(status: Status): Unit = {
-    val tweet = TweetSchema(status.getId, statusToGson(status), status.getCreatedAt.getTime)
+    val tweet = TweetSchema(
+      status.getId, 
+      statusToGson(status), 
+      status.getCreatedAt.getTime,
+      status.getUser.getId,
+      "status"
+    )    
     buffer = buffer ++ Iterator(tweet)
+  }
+
+  def handleDeletion(status: StatusDeletionNotice): Unit = {
+    val notice = TweetSchema(
+      status.getStatusId,
+      "",
+      0L,
+      status.getUserId,
+      "deletion"
+    )
+    buffer = buffer ++ Iterator(notice)
   }
   
   override def simpleStatusListener = new StatusListener() {
@@ -134,6 +151,7 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     }
     
     def onDeletionNotice(statusDeletionNotice: StatusDeletionNotice): Unit = {
+      handleDeletion(statusDeletionNotice)
       //System.err.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
     }
     def onTrackLimitationNotice(numberOfLimitedStatuses: Int): Unit = {
@@ -143,7 +161,15 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
       ex.printStackTrace();
     }
     def onScrubGeo(userId: Long, upToStatusId: Long) : Unit = {
-      System.err.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
+      val scrubGeo = TweetSchema(
+        upToStatusId,
+        "",
+        0L,
+        userId,
+        "scrubGeo"
+      )
+      buffer = buffer ++ Iterator(scrubGeo)
+      //System.err.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
     }
     def onStallWarning(warning: StallWarning) : Unit = {
       System.err.println("Got stall warning:" + warning);
