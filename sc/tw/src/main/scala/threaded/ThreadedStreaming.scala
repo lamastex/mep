@@ -137,7 +137,7 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
   def handleDeletion(status: StatusDeletionNotice): Unit = {
     val notice = TweetSchema(
       status.getStatusId,
-      "",
+      "{}",
       0L,
       status.getUserId,
       "deletion"
@@ -163,7 +163,7 @@ class BufferedTwitterStream(val streamConfig: StreamConfig) extends TwitterBasic
     def onScrubGeo(userId: Long, upToStatusId: Long) : Unit = {
       val scrubGeo = TweetSchema(
         upToStatusId,
-        "",
+        "{}",
         0L,
         userId,
         "scrubGeo"
