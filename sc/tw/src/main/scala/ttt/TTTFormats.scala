@@ -83,7 +83,7 @@ object TTTFormats{
                     TweetType: Option[String],
                     MentionType: Option[String],
                     Weight: Option[Long],
-                    error: Option[String]
+                    errors: List[String] =List.empty[String]
                 )
     /**
     *
@@ -168,7 +168,7 @@ object TTTFormats{
                                     TweetType: Option[String],
                                     MentionType: Option[String],
                                     Weight: Option[Long],
-                                    error: Option[String]
+                                    errors: List[String] =List.empty[String]
                                 )
     /**
     *
@@ -254,7 +254,7 @@ object TTTFormats{
                                     TweetType: Option[String],
                                     MentionType: Option[String],
                                     Weight: Option[Long],
-                                    error: Option[String]
+                                    errors: List[String] =List.empty[String]
                                 )
         
     implicit class TTTSpark(dfReader: DataFrameReader) {
