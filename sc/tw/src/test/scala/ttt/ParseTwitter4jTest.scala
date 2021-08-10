@@ -27,6 +27,7 @@ class ParseTwitter4jTest extends org.scalatest.funsuite.AnyFunSuite{
                               .text(testFilePath)
                               .collect()
                               .map(x=>x.getString(0))
+                              .filter(x => ujson.read(x)("statusType").str == "status")
                               .map(x=>ujson.read(x)("json").toString)
                                 
                                         
