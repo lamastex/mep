@@ -18,10 +18,12 @@ class IOHelperTest extends org.scalatest.funsuite.AnyFunSuite {
       */
     def lineToTweet(line: String) = {
       val arr = line.split(":")
-      val id = arr(1).split(",").head.toLong
-      val json = arr.drop(2).mkString(":").split(",").dropRight(1).mkString(",")
-      val time = arr.last.split("}").head.toLong
-      TweetSchema(id, json, time)
+      val id: Long = arr(1).split(",").head.toLong
+      val json: String = arr.drop(2).mkString(":").split(",").dropRight(3).mkString(",")
+      val time: Long = arr.takeRight(3).head.split(",").head.toLong
+      val userId: Long = arr.takeRight(2).head.split(",").head.toLong
+      val statusType: String = arr.last.split("}").head
+      TweetSchema(id, json, time, userId, statusType)
     }
 
     val source = Source.fromFile(rootPath + "testTweets.jsonl")
