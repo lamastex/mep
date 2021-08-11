@@ -5,14 +5,14 @@ import org.apache.spark.sql.SparkSession
 import scala.util.Try
 import org.lamastex.mep.tw.ttt.TTTFormats._
 import sys.process._
-import scala.io.Source
 
 class ParseTwarcTest extends org.scalatest.funsuite.AnyFunSuite{
+  //generates the testfile
   val bashScript: String = getClass.getResource("/getTwarcFiles.sh").getPath
   val rootPath = bashScript.split("/").dropRight(4).mkString("/")
   s"bash $bashScript $rootPath" !!
-  //generates the testfile
-  //"bash /root/GIT/py/twarc/getTwarcFiles.sh" !!
+
+
   //spark configurations 
   val spark = SparkSession.builder.appName("test").config("spark.master", "local").getOrCreate()
   import spark.implicits._
@@ -23,7 +23,7 @@ class ParseTwarcTest extends org.scalatest.funsuite.AnyFunSuite{
   val wrongSchemaPath = rootPath+"/src/test/resources/schemas/twarc_wrong_schema.json"
   val testFilePath = rootPath+"/src/test/resources/test_twarc.jsonl"
 
-  //neeeded schemas
+  //needed schemas
   val schema = DataType.fromJson(spark.read.text(schemaPath).first.getString(0)).asInstanceOf[StructType]
   val wrongSchema = DataType.fromJson(spark.read.text(wrongSchemaPath).first.getString(0)).asInstanceOf[StructType]
   //needed dataframes

@@ -9,7 +9,6 @@ import sys.process._
 import ujson.read
 import scala.io.Source
 
-
 class ParseTwitter4jTest extends org.scalatest.funsuite.AnyFunSuite{
   //generating test files
   val bashScript: String = getClass.getResource("/getTwitter4jFiles.sh").getPath
