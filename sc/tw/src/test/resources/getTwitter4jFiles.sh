@@ -1,7 +1,8 @@
 #!/bin/bash
-rm -f /root/GIT/sc/tw/tmp/full/placeholder &&
-cd /root/GIT/sc/tw &&
-sbt "runMain org.lamastex.mep.tw.ThreadedTwitterStreamWithWrite /root/GIT/sc/tw/src/test/resources/streamConfigTTTtest.conf" &&
-cat /root/GIT/sc/tw/tmp/test_twitter4j*.jsonl | head -10 > /root/GIT/sc/tw/src/test/resources/test_twitter4j.jsonl &&
-rm -f /root/GIT/sc/tw/tmp/full/*.jsonl &&
-rm -f /root/GIT/sc/tw/tmp/*.jsonl
+root_dir=$1
+rm -f $root_dir/tmp/full/placeholder &&
+cd $root_dir/ &&
+sbt "runMain org.lamastex.mep.tw.ThreadedTwitterStreamWithWrite $root_dir/src/test/resources/streamConfigTTTtest.conf" &&
+cat $root_dir/tmp/test_twitter4j*.jsonl | head -10 > $root_dir/src/test/resources/test_twitter4j.jsonl &&
+rm -f $root_dir/tmp/full/*.jsonl &&
+rm -f $root_dir/tmp/*.jsonl

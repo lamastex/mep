@@ -8,16 +8,22 @@ import sys.process._
 
 class ParseTwarcTest extends org.scalatest.funsuite.AnyFunSuite{
   //generates the testfile
-  "bash /root/GIT/py/twarc/getTwarcFiles.sh" !!
+  val bashScript: String = getClass.getResource("/getTwarcFiles.sh").getPath
+  val rootPath = bashScript.split("/").dropRight(4).mkString("/")
+  s"bash $bashScript $rootPath" !!
+
+
   //spark configurations 
   val spark = SparkSession.builder.appName("test").config("spark.master", "local").getOrCreate()
   import spark.implicits._
   spark.sql("set spark.sql.legacy.timeParserPolicy=LEGACY")
+
   //paths
-  val schemaPath: String = "schemas/twarc_v1.1_schema.json"
-  val wrongSchemaPath: String = "schemas/twarc_wrong_schema.json"
-  val testFilePath: String = "src/test/resources/test_twarc.jsonl"
-  //neeeded schemas
+  val schemaPath = rootPath+"/src/test/resources/schemas/twarc_v1.1_schema.json"
+  val wrongSchemaPath = rootPath+"/src/test/resources/schemas/twarc_wrong_schema.json"
+  val testFilePath = rootPath+"/src/test/resources/test_twarc.jsonl"
+
+  //needed schemas
   val schema = DataType.fromJson(spark.read.text(schemaPath).first.getString(0)).asInstanceOf[StructType]
   val wrongSchema = DataType.fromJson(spark.read.text(wrongSchemaPath).first.getString(0)).asInstanceOf[StructType]
   //needed dataframes
