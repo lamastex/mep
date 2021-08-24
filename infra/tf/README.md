@@ -1,3 +1,7 @@
+# Project MEP in the Sky!
+
+Sky Computing Infrastructure as Code for *Project MEP: Meme Evolution Programme*, mainly to collect tweets scalably in an AI/BI-ready lakehouse architecture.
+
 ## Terraform for Twitter streaming
 [Terraform](https://terraform.io) is a framework for Infrastructure as Code (IaC), meaning that it enables the user to write human-readable specifications for complex infrastructure. This is an example showcasing how Terraform can be used to deploy the [Scala library](../../sc/tw/) in this repository and use it to write the Twitter Stream into files that are then copied to cloud storage in S3.
 
