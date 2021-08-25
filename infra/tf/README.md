@@ -4,19 +4,10 @@
 ### Directory structure and execution
 There are two Terraform projects present in this showcase. 
 
-1. The project in [server/](./server/) is for launching an EC2 instance with the necessary IAM role to access S3,preparing the instance for deployment of the second project, and sets up for transfer of files to S3.
+The project in [server/](./server/) is for launching an EC2 instance with the necessary IAM role to access S3,preparing the instance for deployment of the second project, and sets up for transfer of files to S3.
   * Note that the server cannot be successfully deployed without the necessary files in the credentials directory. See details below.
-2. The project in [docker/](./docker/) is for deploying a docker container to the newly created instance, which starts collecting the Twitter stream and writes it to files.
 
-The server must be deployed before the docker container, since the container attaches to the server. It is necessary to do this in two separate projects since there is no way to make Terraform wait for the server to finish deploying before starting to deploy the docker container.
-
-Hence, the way to start the project when all files are present is the following:
-1. `cd` into the `server/` directory and deploy the project by running `terraform apply` and typing `yes` when prompted. Note that the EC2 instance launched is **not** part of AWS Free Tier.
-2. Wait for the server to fully deploy and complete the initialization described in the [cloud-init configuration](./server/cloud-init.yml). This usually takes 3-5 minutes in total. The progress can be checked by using the [ssh script](./server/launch-ssh.sh) to ssh into the EC2 instance and running `htop`. If the machine is idle for several seconds, the script is finished.
-3. `cd` into the `docker/` directory and deploy the container by running `terraform apply`, again typing `yes` when prompted.
-
-To terminate the stream, run `terraform destroy` in the `docker/` directory, typing `yes` when prompted.
-To terminate the EC2 instance, first terminate the stream, and then run `terraform destroy` in the `server/` directory, typing `yes` when prompted.
+To terminate the stream and the instance, run `terraform destroy` in the `server/` directory, typing `yes` when prompted.
 
 ### Credentials and other resources
 In order to launch the EC2 instance and successfully prepare it for the Twitter stream, a number of files need to be present in the directory `server/credentials/`. All necessary files are given as `.template`, meaning that the actual files should follow that template to work.
