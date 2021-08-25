@@ -1,4 +1,10 @@
 terraform {
+  backend "remote" {
+    organization = "lamastex"
+    workspaces {
+      name = "twitter-server"
+    }
+  } 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -23,6 +29,18 @@ resource "aws_instance" "ec2_instance" {
   iam_instance_profile        = aws_iam_instance_profile.read_write.name
   tags = {
     Name = "twitter-stream-ingestion"
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/resources"
+    destination = "/tmp"
+
+    connection {
+      type        = "ssh"
+      private_key = file("${path.module}/credentials/aws-ssh-key-pair.pem")
+      user        = "ubuntu"
+      host        = self.public_dns
+    }
   }
 
   user_data = data.template_file.instance_startup_script.rendered
