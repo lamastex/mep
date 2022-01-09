@@ -17,3 +17,15 @@ See [mep/r](r/)
 Project MEP: Meme Evolution programme. Infrastructure as Code via [terraform.io](https://www.terraform.io/) 
 
 See [mep/infra/tf](infra/tf/)
+
+# Acknowledgements
+
+This project was supported by Combient Mix AB through summer interships, exjobbs and fellowships at 
+The Combient Competence Centre for Data Engineering Sciences, Department of Mathematics, 
+Uppsala University, Uppsala, Sweden during:
+
+- 2021 to Johannes Graner, Albert Nilsson, Alfred Lindstrom and Mattias Mineur.
+
+This work was partly supported by a grant from the Swedish Royal Society, a grant from the Wallenberg
+AI, Autonomous Systems and Software Program funded by Knut and Alice Wallenberg Foundation, and 
+Databricks University Alliance with AWS credits to Raazesh Sainudiin.
