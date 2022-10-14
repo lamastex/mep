@@ -1,3 +1,6 @@
+# mep
+Project MEP: Meme Evolution programme. A terraformed multi-language library to do statistical experiments in Twitter. 
+
 # mep/sc
 Project MEP: Meme Evolution programme. A scala library to do statistical experiments in Twitter. 
 
