@@ -1,0 +1,43 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Project MEP
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Johannes
+    email: johannes.graner@gmail.com
+    family-names: Graner
+  - given-names: Alfred
+    family-names: Lindström
+    email: lindstrom.alfred@gmail.com
+  - given-names: Raazesh
+    email: raazesh.sainudiin@gmail.com
+    family-names: Sainudiin
+    orcid: 'https://orcid.org/0000-0003-3265-5565'
+identifiers:
+  - type: url
+    value: >-
+      https://github.com/lamastex/mep/releases/tag/mep-1.0
+    description: The URL of version 1.0 of the software
+repository-code: 'https://github.com/lamastex/mep'
+abstract: >-
+  Project MEP: Meme Evolution programme. A
+  terraformed multi-language library to do
+  statistical experiments in Twitter.
+keywords:
+  - Twitter APIs
+  - Apache Spark
+  - SparkSQL
+  - Scala
+  - R
+  - Python
+  - Delta Lake
+  - terraform
+  - Live Experimental Designs
+license: Apache-2.0
+version: '1.0'
+date-released: '2021-08-27'
