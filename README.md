@@ -27,7 +27,7 @@ This project was supported by Combient Mix AB through summer interships, exjobbs
 The Combient Competence Centre for Data Engineering Sciences, Department of Mathematics, 
 Uppsala University, Uppsala, Sweden during:
 
-- 2021 to Johannes Graner, Albert Nilsson, Alfred Lindstrom and Mattias Mineur.
+- 2021 to Johannes Graner, Albert Nilsson, Alfred Lindstrom.
 
 This work was partly supported by a grant from the Swedish Royal Society, a grant from the Wallenberg
 AI, Autonomous Systems and Software Program funded by Knut and Alice Wallenberg Foundation, and 
